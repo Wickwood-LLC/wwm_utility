@@ -12,7 +12,7 @@ class MediaUtility {
    * @param array $fields
    *  Field machine names for formatted fields to look for embeds.
    */
-  public function findD7MediaEmbeds(FieldableEntityInterface $entity, $fields) {
+  public function findD7MediaEmbedsInEntity(FieldableEntityInterface $entity, $fields) {
     $pattern = '/\[\[\{.*?"type":"media".*?\}\]\]/s';
 
     $media_embeds = [
@@ -32,6 +32,35 @@ class MediaUtility {
         }
         if (empty($media_embeds['embeds'][$field_name])) {
           unset($media_embeds['embeds'][$field_name]);
+        }
+      }
+    }
+    return $media_embeds;
+  }
+
+  /**
+   * @param string $entity_type
+   * @param array $field_types
+   */
+  public function findD7MediaEmbeds($entity_type, array $field_types) {
+    $wwm_field_utility = \Drupal::service('wwm_utility.field');
+    $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+
+    $fields = $wwm_field_utility->findFilesOfType($field_types, 'node');
+
+    $media_embeds = [];
+
+    foreach ($fields as $entity_type => $bundles) {
+      foreach ($bundles as $bundle => $formatted_fields) {
+        $query = \Drupal::entityQuery($entity_type)
+          ->condition('type', $bundle);
+        $results = $query->execute();
+        foreach ($results as $nid) {
+          $node = $entity_storage->load($nid);
+          $media_embeds_on_node = $this->findD7MediaEmbedsInEntity($node, $fields[$entity_type][$bundle]);
+          if (!empty($media_embeds_on_node['embeds'])) {
+            $media_embeds[$node->id()] = $media_embeds_on_node;
+          }
         }
       }
     }
