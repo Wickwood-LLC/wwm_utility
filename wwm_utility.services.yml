@@ -1,0 +1,4 @@
+services:
+  wwm_utility.field:
+    class: Drupal\wwm_utility\FieldUtility
+    arguments: []
