@@ -1,0 +1,7 @@
+name: 'WWM Utility'
+type: module
+description: 'Utility functionalities for helping tasks to do easier.'
+core_version_requirement: ^9
+package: 'WWM'
+
+dependencies:
