@@ -2,3 +2,6 @@ services:
   wwm_utility.field:
     class: Drupal\wwm_utility\FieldUtility
     arguments: []
+  wwm_utility.media:
+    class: Drupal\wwm_utility\MediaUtility
+    arguments: []
