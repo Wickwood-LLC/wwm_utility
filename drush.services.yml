@@ -1,0 +1,5 @@
+services:
+  wwm_utility.fix_migration_commands:
+    class: \Drupal\wwm_utility\Commands\FixMigration
+    tags:
+      - { name: drush.command }
