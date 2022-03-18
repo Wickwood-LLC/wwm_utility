@@ -50,6 +50,7 @@ class MediaUtility {
           $embed_info = [];
           // $media_embeds['embeds'][$field_name]['code'] = $match;
           $embed_info['code'] = $match;
+          $embed_info['new_code'] = $this->convertD7MediaEmbedToD9($match);
           $match = str_replace("[[", "", $match);
           $match = str_replace("]]", "", $match);
           $tag_info = Json::decode($match);
@@ -158,6 +159,13 @@ class MediaUtility {
       $fields = $tag_info['fields'];
     }
 
+    if (!is_array($fields)) {
+      $fields = [];
+    }
+
+    $dom = new \DOMDocument('1.0', 'utf-8');
+    $element = $dom->createElement('drupal-entity');
+
     $embed_options = [];
     foreach ($fields as $key => $value) {
       if (preg_match('#^field_media_placement#', $key)) {
@@ -166,8 +174,8 @@ class MediaUtility {
       else if (preg_match('#^field_long_caption.*value\\]$#', $key)) {
         $embed_options['caption'] = $value;
       }
-      else if (preg_match('#^field_long_caption.*value\\]$#', $key)) {
-        $embed_options['caption'] = $value;
+      else if (preg_match('#^field_file_image_alt_text.*value\\]$#', $key)) {
+        $element->setAttribute('alt', $value);
       }
       else if (preg_match('#^field_image_link.*url\\]$#', $key)) {
         $embed_options['link'] = $value;
@@ -177,18 +185,15 @@ class MediaUtility {
       }
     }
 
-    $dom = new \DOMDocument('1.0', 'utf-8');
-    $element = $dom->createElement('drupal-entity');
-
     $element->setAttribute('data-entity-type', 'media');
     $element->setAttribute('data-entity-uuid', $media->uuid());
     $element->setAttribute('data-langcode', $media->language()->getId());
     $element->setAttribute('data-embed-button', 'media');
 
     $display_settings = [];
+    $d7_view_mode = $tag_info['view_mode'];
 
     if ($media->bundle() == 'image') {
-      $d7_view_mode = $tag_info['view_mode'];
       if ($d7_view_mode == 'default') {
         $image_style = '';
         $display = 'entity_reference:static_image';
@@ -204,6 +209,18 @@ class MediaUtility {
             $display = 'entity_reference:static_image';
           }
         }
+        if (!$image_style) {
+          $image_style_replacements = $this->imageStyleReplacements();
+          if (isset($image_style_replacements[$d7_view_mode])) {
+            if (preg_match('#^responsive_#', $d7_view_mode)) {
+              $display = 'entity_reference:media_image_responsive';
+            }
+            else {
+              $display = 'entity_reference:static_image';
+            }
+            $display_settings['image_style'] = $image_style_replacements[$d7_view_mode];
+          }
+        }
         if ($image_style) {
           $display_settings['image_style'] = $d7_view_mode;
         }
@@ -212,6 +229,21 @@ class MediaUtility {
         $display_settings['linkit'] = $embed_options['link'];
       }
     }
+    else if ($d7_view_mode == 'media_link') {
+      $display = 'entity_reference:generic_media_link';
+      // In D7, there appears to be no way to give separate title for link.
+      $display_settings['use_url_as_link_text'] = 1;
+    }
+    else if ($media->bundle() == 'video') {
+      // We don't support videos now, sorry!
+      return;
+    }
+    else if ($media->bundle() == 'document') {
+      // We don't support documents now, sorry!
+      return;
+    }
+
+    $element->setAttribute('data-entity-embed-display', $display);
 
     $element->setAttribute('data-entity-embed-display-settings', Json::encode((object) $display_settings));
 
