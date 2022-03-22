@@ -18,13 +18,6 @@ use Drush\Commands\DrushCommands;
 class FixMigration extends DrushCommands {
 
   /**
-   * The key value store to use.
-   *
-   * @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface
-   */
-  protected $keyValueStore;
-
-  /**
    */
   public function __construct() {
   }
