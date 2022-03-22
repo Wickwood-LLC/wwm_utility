@@ -3,3 +3,7 @@ services:
     class: \Drupal\wwm_utility\Commands\FixMigration
     tags:
       - { name: drush.command }
+  wwm_utility.fix_field_commands:
+    class: \Drupal\wwm_utility\Commands\FieldUpdate
+    tags:
+      - { name: drush.command }
