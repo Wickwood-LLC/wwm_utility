@@ -32,7 +32,16 @@ class MediaUtility {
    *  Field machine names for formatted fields to look for embeds.
    */
   public function findD7MediaEmbedsInEntity(FieldableEntityInterface $entity, $fields) {
+    $entity_type = $entity->getEntityType();
+    $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type->id());
+    $revisions = $entity_storage->getQuery()
+      ->allRevisions()
+      ->condition($entity_type->getKey('id'), $entity->id())
+      ->sort($entity_type->getKey('revision'), 'DESC')
+      ->execute();
+
     $pattern = '/\[\[\{.*?"type":"media".*?\}\]\]/s';
+    $database = \Drupal::database();
 
     $media_embeds = [
       'id' => $entity->id(),
@@ -43,75 +52,91 @@ class MediaUtility {
 
     $media_storage = \Drupal::entityTypeManager()->getStorage('media');
 
-    foreach ($fields as $field_name) {
-      if ($entity->{$field_name}->value) {
-        preg_match_all($pattern, $entity->{$field_name}->value, $matches);
-        foreach ($matches[0] as $match) {
-          $embed_info = [];
-          // $media_embeds['embeds'][$field_name]['code'] = $match;
-          $embed_info['code'] = $match;
-          $embed_info['new_code'] = $this->convertD7MediaEmbedToD9($match);
-          $match = str_replace("[[", "", $match);
-          $match = str_replace("]]", "", $match);
-          $tag_info = Json::decode($match);
+    foreach ($revisions as $revision_id => $entity_id) {
+      $revision = $entity_storage->loadRevision($revision_id);
+      foreach ($fields as $field_name) {
+        if ($revision->{$field_name}->value) {
+          preg_match_all($pattern, $revision->{$field_name}->value, $matches);
+          foreach ($matches[0] as $match) {
+            $embed_info = [];
+            // $media_embeds['embeds'][$field_name]['code'] = $match;
+            $embed_info['code'] = $match;
+            $embed_info['new_code'] = $this->convertD7MediaEmbedToD9($match);
+            $match = str_replace("[[", "", $match);
+            $match = str_replace("]]", "", $match);
+            $tag_info = Json::decode($match);
 
-          $media = $media_storage->load($tag_info['fid']);
-          $embed_info['messages'][] = $this->t('Media of type @type', ['@type' => $media->bundle()]);
-          $embed_info['messages'][] = $this->t('Embedded with view mode "@mode"', ['@mode' => $tag_info['view_mode']]);
-
-          if ($media->bundle() == 'image') {
-            $d7_view_mode = $tag_info['view_mode'];
-            if ($d7_view_mode == 'default') {
-              $embed_info['messages'][] = $this->t('Original size');
+            $media = $media_storage->load($tag_info['fid']);
+            if (!$media) {
+              $result = $database->query("SELECT original_fid FROM {duplicate_files} WHERE fid = :fid", [':fid' => $tag_info['fid']])->fetchField();
+              if ($result) {
+                $media = $media_storage->load($result);
+                $embed_info['messages'][] = $this->t('Original media with ID @id could not be found, but replacement media with ID @new_id identified.', ['@id' => $tag_info['fid'], '@new_id' => $result]);
+              }
+              else {
+                $embed_info['messages'][] = $this->t('Media could not be found with ID: @id. Replacement could not be found either.', ['@id' => $tag_info['fid']]);
+              }
             }
-            else {
-              $image_style = ResponsiveImageStyle::load($d7_view_mode);
-              if ($image_style) {
-                $embed_info['messages'][] = $this->t('It is responsive image style');
-                $display = 'entity_reference:media_image_responsive';
-              }
-              else {
-                $image_style = ImageStyle::load($d7_view_mode);
-                if ($image_style) {
-                  $embed_info['messages'][] = $this->t('It is regular image style');
-                  $display = 'entity_reference:static_image';
+            if ($media) {
+              $embed_info['messages'][] = $this->t('Media of type @type', ['@type' => $media->bundle()]);
+              $embed_info['messages'][] = $this->t('Embedded with view mode "@mode"', ['@mode' => $tag_info['view_mode']]);
+
+              if ($media->bundle() == 'image') {
+                $d7_view_mode = $tag_info['view_mode'];
+                if ($d7_view_mode == 'default') {
+                  $embed_info['messages'][] = $this->t('Original size');
                 }
-              }
-              if ($image_style) {
-                $display_settings['image_style'] = $d7_view_mode;
-                if (!empty($embed_options['link'])) {
-                  $display_settings['linkit'] = $embed_options['link'];
-                }
-              }
-              else {
-                $image_style_replacements = $this->imageStyleReplacements();
-                if (isset($image_style_replacements[$d7_view_mode])) {
-                  if (preg_match('#^responsive_#', $d7_view_mode)) {
+                else {
+                  $image_style = ResponsiveImageStyle::load($d7_view_mode);
+                  if ($image_style) {
+                    $embed_info['messages'][] = $this->t('It is responsive image style');
                     $display = 'entity_reference:media_image_responsive';
                   }
                   else {
-                    $display = 'entity_reference:static_image';
+                    $image_style = ImageStyle::load($d7_view_mode);
+                    if ($image_style) {
+                      $embed_info['messages'][] = $this->t('It is regular image style');
+                      $display = 'entity_reference:static_image';
+                    }
                   }
-                  $display_settings['image_style'] = $image_style_replacements[$d7_view_mode];
-                  $embed_info['messages'][] = $this->t('Image style replacement found for "@old" is "@new"', ['@old' => $d7_view_mode, '@new' => $image_style_replacements[$d7_view_mode]]);
+                  if ($image_style) {
+                    $display_settings['image_style'] = $d7_view_mode;
+                    if (!empty($embed_options['link'])) {
+                      $display_settings['linkit'] = $embed_options['link'];
+                    }
+                  }
+                  else {
+                    $image_style_replacements = $this->imageStyleReplacements();
+                    if (isset($image_style_replacements[$d7_view_mode])) {
+                      if (preg_match('#^responsive_#', $d7_view_mode)) {
+                        $display = 'entity_reference:media_image_responsive';
+                      }
+                      else {
+                        $display = 'entity_reference:static_image';
+                      }
+                      $display_settings['image_style'] = $image_style_replacements[$d7_view_mode];
+                      $embed_info['messages'][] = $this->t('Image style replacement found for "@old" is "@new"', ['@old' => $d7_view_mode, '@new' => $image_style_replacements[$d7_view_mode]]);
+                    }
+                    else {
+                      $embed_info['messages'][] = $this->t('No image style "@name" found', ['@name' => $d7_view_mode]);
+                    }
+                  }
                 }
-                else {
-                  $embed_info['messages'][] = $this->t('No image style "@name" found', ['@name' => $d7_view_mode]);
-                }
+
+              }
+              if (!empty($embed_options['link'])) {
+                $embed_info['messages'][] = $this->t('It is linked');
               }
             }
-      
+            $media_embeds['embeds'][$revision_id][$field_name][] = $embed_info;
           }
-          if (!empty($embed_options['link'])) {
-            $embed_info['messages'][] = $this->t('It is linked');
+          if (empty($media_embeds['embeds'][$revision_id][$field_name])) {
+            unset($media_embeds['embeds'][$revision_id][$field_name]);
           }
-          $media_embeds['embeds'][$field_name][] = $embed_info;
-        }
-        if (empty($media_embeds['embeds'][$field_name])) {
-          unset($media_embeds['embeds'][$field_name]);
         }
       }
     }
+
     return $media_embeds;
   }
 
@@ -119,9 +144,12 @@ class MediaUtility {
    * @param string $entity_type
    * @param array $field_types
    */
-  public function findD7MediaEmbeds($entity_type, array $field_types) {
+  public function findD7MediaEmbeds($entity_type, array $field_types, $entity_id = NULL) {
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type);
+
     $wwm_field_utility = \Drupal::service('wwm_utility.field');
-    $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+    $entity_storage = $entity_type_manager->getStorage($entity_type);
 
     $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
 
@@ -130,7 +158,10 @@ class MediaUtility {
     foreach ($fields as $entity_type => $bundles) {
       foreach ($bundles as $bundle => $formatted_fields) {
         $query = \Drupal::entityQuery($entity_type)
-          ->condition('type', $bundle);
+          ->condition($entity_definition->getKey('bundle'), $bundle);
+        if ($entity_id) {
+          $query->condition($entity_definition->getKey('id'), $entity_id);
+        }
         $results = $query->execute();
         foreach ($results as $id) {
           $entity = $entity_storage->load($id);
@@ -151,6 +182,9 @@ class MediaUtility {
 
     $media_storage = \Drupal::entityTypeManager()->getStorage('media');
     $media = $media_storage->load($tag_info['fid']);
+    if (!$media) {
+      return;
+    }
 
     if (!empty($tag_info['field_detas'])) {
       $fields = end($tag_info['field_detas']);
