@@ -10,7 +10,13 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 class MediaUtility {
 
+  protected $embed_view_modes;
+
   use StringTranslationTrait;
+
+  public function getD7ViewModesFound() {
+    return $this->embed_view_modes;
+  }
 
   public function imageStyleReplacements() {
     return [
@@ -145,6 +151,8 @@ class MediaUtility {
    * @param array $field_types
    */
   public function findD7MediaEmbeds($entity_type, array $field_types, $entity_id = NULL) {
+    $this->embed_view_modes = [];
+
     $entity_type_manager = \Drupal::entityTypeManager();
     $entity_definition = $entity_type_manager->getDefinition($entity_type);
 
@@ -226,6 +234,9 @@ class MediaUtility {
 
     $display_settings = [];
     $d7_view_mode = $tag_info['view_mode'];
+    if (!in_array($d7_view_mode, $this->embed_view_modes)) {
+      $this->embed_view_modes[] = $d7_view_mode;
+    }
 
     if ($media->bundle() == 'image') {
       if ($d7_view_mode == 'default') {
