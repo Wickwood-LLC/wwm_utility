@@ -20,15 +20,46 @@ class MediaUtility {
 
   public function imageStyleReplacements() {
     return [
-      'scale_480x270' => 'scale_landscape_480x270',
-      'responsive_image_large_16x9' => 'image_large_16x9',
-      'responsive_image_small_16x9' => 'image_small_16x9',
-      'responsive_image_medium_4x3' => 'image_medium_4x3',
-      'responsive_image_small_4x3' => 'image_small_4x3',
-      'polaroid_landscape_rotate_right' => 'polaroid_landscape_290x210_rotate_left',
-      'scale_640x480' => 'scale_landscape_640x480',
-      'responsive_image_large_4x3' => 'image_large_4x3',
-      'responsive_image_medium_16x9' => 'landscape_16x9_medium',
+      'scale_480x270' => [
+        'image_style' => 'image_medium_16x9',
+      ],
+      'responsive_image_large_16x9' => [
+        'image_style' => 'image_large_16x9',
+      ],
+      'scale_320x240' => [
+        'image_style' => 'image_medium_4x3',
+      ],
+      'responsive_image_small_16x9' => [
+        'image_style' => 'image_small_16x9',
+      ],
+      'responsive_image_medium_4x3' => [
+        'image_style' => 'image_medium_4x3',
+      ],
+      'responsive_image_small_4x3' => [
+        'image_style' => 'image_small_4x3',
+      ],
+      'polaroid_landscape_rotate_right' => [
+        'image_style' => 'responsive_polaroid_landscape',
+        'rotate' => 'right',
+        'align' => 'right',
+      ],
+      'polaroid_landscape_rotate_left' => [
+        'image_style' => 'responsive_polaroid_landscape',
+        'rotate' => 'left',
+        'align' => 'left',
+      ],
+      'scale_640x480' => [
+        'image_style' => 'image_large_4x3',
+      ],
+      'responsive_image_large_4x3' => [
+        'image_style' => 'image_large_4x3',
+      ],
+      'responsive_image_medium_16x9' => [
+        'image_style' => 'image_medium_16x9',
+      ],
+      'scale_560x315' => [
+        'image_style' => 'image_large_16x9',
+      ],
     ];
   }
 
@@ -87,48 +118,33 @@ class MediaUtility {
               $embed_info['messages'][] = $this->t('Media of type @type', ['@type' => $media->bundle()]);
               $embed_info['messages'][] = $this->t('Embedded with view mode "@mode"', ['@mode' => $tag_info['view_mode']]);
 
+              $d7_view_mode = $tag_info['view_mode'];
               if ($media->bundle() == 'image') {
-                $d7_view_mode = $tag_info['view_mode'];
-                if ($d7_view_mode == 'default') {
+                $image_style_replacements = $this->imageStyleReplacements();
+
+                if (!empty($image_style_replacements[$d7_view_mode])) {
+                  $image_style_replacement = $image_style_replacements[$d7_view_mode];
+                  $display = 'entity_reference:media_image_responsive';
+                  $image_style = $image_style_replacement['image_style'];
+
+                  $embed_info['messages'][] = $this->t('Image style replacement found for "@old" is "@new"', ['@old' => $d7_view_mode, '@new' => $image_style_replacements[$d7_view_mode]['image_style']]);
+
+                  if (!empty($image_style_replacement['align'])) {
+                    $align = $image_style_replacement['align'];
+                    $embed_info['messages'][] = $this->t('Set to align @align', ['@align' => $align]);
+                  }
+
+                  if (!empty($image_style_replacement['rotate'])) {
+                    $rotate = $image_style_replacement['rotate'];
+                    $embed_info['messages'][] = $this->t('Set to rotate @rotate', ['@rotate' => $rotate]);
+                  }
+                }
+                else if ($d7_view_mode == 'default') {
                   $embed_info['messages'][] = $this->t('Original size');
                 }
                 else {
-                  $image_style = ResponsiveImageStyle::load($d7_view_mode);
-                  if ($image_style) {
-                    $embed_info['messages'][] = $this->t('It is responsive image style');
-                    $display = 'entity_reference:media_image_responsive';
-                  }
-                  else {
-                    $image_style = ImageStyle::load($d7_view_mode);
-                    if ($image_style) {
-                      $embed_info['messages'][] = $this->t('It is regular image style');
-                      $display = 'entity_reference:static_image';
-                    }
-                  }
-                  if ($image_style) {
-                    $display_settings['image_style'] = $d7_view_mode;
-                    if (!empty($embed_options['link'])) {
-                      $display_settings['linkit'] = $embed_options['link'];
-                    }
-                  }
-                  else {
-                    $image_style_replacements = $this->imageStyleReplacements();
-                    if (isset($image_style_replacements[$d7_view_mode])) {
-                      if (preg_match('#^responsive_#', $d7_view_mode)) {
-                        $display = 'entity_reference:media_image_responsive';
-                      }
-                      else {
-                        $display = 'entity_reference:static_image';
-                      }
-                      $display_settings['image_style'] = $image_style_replacements[$d7_view_mode];
-                      $embed_info['messages'][] = $this->t('Image style replacement found for "@old" is "@new"', ['@old' => $d7_view_mode, '@new' => $image_style_replacements[$d7_view_mode]]);
-                    }
-                    else {
-                      $embed_info['messages'][] = $this->t('No image style "@name" found', ['@name' => $d7_view_mode]);
-                    }
-                  }
+                  $embed_info['messages'][] = $this->t('Image style not handled "@name"', ['@name' => $d7_view_mode]);
                 }
-
               }
               if (!empty($embed_options['link'])) {
                 $embed_info['messages'][] = $this->t('It is linked');
@@ -239,36 +255,27 @@ class MediaUtility {
     }
 
     if ($media->bundle() == 'image') {
-      if ($d7_view_mode == 'default') {
-        $image_style = '';
-        $display = 'entity_reference:static_image';
+      $image_style_replacements = $this->imageStyleReplacements();
+
+      if (!empty($image_style_replacements[$d7_view_mode])) {
+        $image_style_replacement = $image_style_replacements[$d7_view_mode];
+        $display = 'entity_reference:media_image_responsive';
+        $image_style = $image_style_replacement['image_style'];
+        $display_settings['image_style'] = $image_style_replacement['image_style'];
+
+        if (!empty($image_style_replacement['align'])) {
+          $align = $image_style_replacement['align'];
+        }
+
+        if (!empty($image_style_replacement['rotate'])) {
+          $rotate = $image_style_replacement['rotate'];
+        }
+      }
+      else if ($d7_view_mode == 'default') {
+        $display = 'entity_reference:media_image_responsive';
       }
       else {
-        $image_style = ResponsiveImageStyle::load($d7_view_mode);
-        if ($image_style) {
-          $display = 'entity_reference:media_image_responsive';
-        }
-        else {
-          $image_style = ImageStyle::load($d7_view_mode);
-          if ($image_style) {
-            $display = 'entity_reference:static_image';
-          }
-        }
-        if (!$image_style) {
-          $image_style_replacements = $this->imageStyleReplacements();
-          if (isset($image_style_replacements[$d7_view_mode])) {
-            if (preg_match('#^responsive_#', $d7_view_mode)) {
-              $display = 'entity_reference:media_image_responsive';
-            }
-            else {
-              $display = 'entity_reference:static_image';
-            }
-            $display_settings['image_style'] = $image_style_replacements[$d7_view_mode];
-          }
-        }
-        if ($image_style) {
-          $display_settings['image_style'] = $d7_view_mode;
-        }
+        throw new \Exception($this->t('Please handle image style for view mode @view_mode', ['@view_mode' => $d7_view_mode]));
       }
       if (!empty($embed_options['link'])) {
         $display_settings['linkit'] = $embed_options['link'];
@@ -292,7 +299,7 @@ class MediaUtility {
 
     $element->setAttribute('data-entity-embed-display-settings', Json::encode((object) $display_settings));
 
-    if (!empty($embed_options['placement'])) {
+    if (empty($align) && !empty($embed_options['placement'])) {
       switch ($embed_options['placement']) {
         case 'mce-align-center':
           $align = 'center';
@@ -311,9 +318,12 @@ class MediaUtility {
           $align = '';
           break;
       }
-      if (!empty($align)) {
-        $element->setAttribute('data-align', $align);
-      }
+    }
+    if (!empty($align)) {
+      $element->setAttribute('data-align', $align);
+    }
+    if (!empty($rotate)) {
+      $element->setAttribute('data-rotate', $rotate);
     }
 
     $dom->appendChild($element);
