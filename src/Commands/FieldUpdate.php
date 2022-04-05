@@ -46,20 +46,43 @@ class FieldUpdate extends DrushCommands {
     $entity_type_manager = \Drupal::entityTypeManager();
     $entity_definition = $entity_type_manager->getDefinition($entity_type);
     $entity_storage = $entity_type_manager->getStorage($entity_type);
-    
-    $query = \Drupal::entityQuery($entity_type)
-      ->condition($entity_definition->getKey('bundle'), $bundles, 'IN');
-    $results = $query->execute();
 
 
     if ($entity_id) {
       $entity = $entity_storage->load($entity_id);
-      $this->setTextFormatOnField($entity, $fields, $format);
+      $entity_type = $entity->getEntityType();
+
+      $revisions = $entity_storage->getQuery()
+        ->allRevisions()
+        ->condition($entity_type->getKey('id'), $entity->id())
+        ->sort($entity_type->getKey('revision'), 'DESC')
+        ->execute();
+
+      foreach ($revisions as $revision_id => $entity_id) {
+        $revision = $entity_storage->loadRevision($revision_id);
+        $this->setTextFormatOnField($revision, $fields, $format);
+      }
+      // $entity = $entity_storage->load($entity_id);
     }
     else {
+      $query = \Drupal::entityQuery($entity_type)
+        ->condition($entity_definition->getKey('bundle'), $bundles, 'IN');
+      $results = $query->execute();
+
       foreach ($results as $entity_id) {
         $entity = $entity_storage->load($entity_id);
-        $this->setTextFormatOnField($entity, $fields, $format);
+        $entity_type = $entity->getEntityType();
+
+        $revisions = $entity_storage->getQuery()
+          ->allRevisions()
+          ->condition($entity_type->getKey('id'), $entity->id())
+          ->sort($entity_type->getKey('revision'), 'DESC')
+          ->execute();
+
+        foreach ($revisions as $revision_id => $entity_id) {
+          $revision = $entity_storage->loadRevision($revision_id);
+          $this->setTextFormatOnField($revision, $fields, $format);
+        }
       }
     }
   }
