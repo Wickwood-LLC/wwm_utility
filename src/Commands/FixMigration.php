@@ -23,14 +23,13 @@ class FixMigration extends DrushCommands {
   }
 
   private function convertMediaEmbedsFromD7ToD9InEntity($entity, $embed_info) {
-    $count = 1;
     $changed = FALSE;
-    foreach ($embed_info['embeds'] as $field_name => $embeds) {
+    foreach ($embed_info as $field_name => $embeds) {
       $text = $entity->{$field_name}->value;
       $field_changed = FALSE;
       foreach ($embeds as $embed) {
         if (!empty($embed['new_code'])) {
-          $text = str_replace($embed['code'], $embed['new_code'], $text, $count);
+          $text = str_replace($embed['code'], $embed['new_code'], $text);
           $changed = TRUE;
           $field_changed = TRUE;
         }
@@ -60,19 +59,26 @@ class FixMigration extends DrushCommands {
 
     $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type);
 
-    if (empty($id)) {
-      $media_embeds = $wwm_media_utility->findD7MediaEmbeds($entity_type, $field_types);
-      foreach ($media_embeds as $id => $embed_info) {
-        $entity = $entity_storage->load($embed_info['id']);
-        $this->convertMediaEmbedsFromD7ToD9InEntity($entity, $embed_info);
+    $media_embeds = $wwm_media_utility->findD7MediaEmbeds($entity_type, $field_types, $id);
+    foreach ($media_embeds as $id => $embed_info) {
+      foreach ($embed_info['embeds'] as $revision_id => $embeds) {
+        $entity_revision = $entity_storage->loadRevision($revision_id);
+        $this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds);
       }
     }
-    else {
-      $wwm_field_utility = \Drupal::service('wwm_utility.field');
-      $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
-      $entity = $entity_storage->load($id);
-      $media_embeds_on_node = $wwm_media_utility->findD7MediaEmbedsInEntity($entity, $fields[$entity_type][$entity->bundle()]);
-      $this->convertMediaEmbedsFromD7ToD9InEntity($entity, $media_embeds_on_node);
-    }
+    // else {
+    //   $wwm_field_utility = \Drupal::service('wwm_utility.field');
+    //   $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
+    //   $media_embeds = $wwm_media_utility->findD7MediaEmbeds($entity_type, $field_types, $id);
+    //   if (!empty($media_embeds[$id])) {
+    //     foreach ($media_embeds[$id]['embeds'] as $revision_id => $embeds) {
+    //       $entity_revision = $entity_storage->loadRevision($revision_id);
+    //       // $this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds);
+    //     }
+    //   }
+    //   // $entity = $entity_storage->load($id);
+    //   // $media_embeds_on_node = $wwm_media_utility->findD7MediaEmbedsInEntity($entity, $fields[$entity_type][$entity->bundle()]);
+    //   // $this->convertMediaEmbedsFromD7ToD9InEntity($entity, $media_embeds_on_node);
+    // }
   }
 }
