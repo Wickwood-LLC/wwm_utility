@@ -60,7 +60,7 @@ class FieldUpdate extends DrushCommands {
 
       foreach ($revisions as $revision_id => $entity_id) {
         $revision = $entity_storage->loadRevision($revision_id);
-        $this->setTextFormatOnField($revision, $fields, $format);
+        $this->setTextFormatOnField($revision, $fields, $format, $revision_id);
       }
       // $entity = $entity_storage->load($entity_id);
     }
@@ -81,13 +81,13 @@ class FieldUpdate extends DrushCommands {
 
         foreach ($revisions as $revision_id => $entity_id) {
           $revision = $entity_storage->loadRevision($revision_id);
-          $this->setTextFormatOnField($revision, $fields, $format);
+          $this->setTextFormatOnField($revision, $fields, $format, $revision_id);
         }
       }
     }
   }
 
-  protected function setTextFormatOnField($entity, $fields, $format) {
+  protected function setTextFormatOnField($entity, $fields, $format, $revision_id) {
     $entity_changed = FALSE;
     foreach ($fields as $field) {
       if ($entity->{$field}->value && $entity->{$field}->format != $format) {
@@ -96,6 +96,11 @@ class FieldUpdate extends DrushCommands {
       }
     }
     if ($entity_changed) {
+      // There is a bug that prevents saving a change in field when it matches with default revision.
+      // This is a workaround to that problem got from https://www.drupal.org/project/drupal/issues/2859042#comment-13083066
+      $entity_storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityType()->id());
+      $entity->original = $entity_storage->loadRevision($revision_id);
+
       $entity->save();
     }
   }
