@@ -22,7 +22,7 @@ class FixMigration extends DrushCommands {
   public function __construct() {
   }
 
-  private function convertMediaEmbedsFromD7ToD9InEntity($entity, $embed_info) {
+  private function convertMediaEmbedsFromD7ToD9InEntity($entity, $embed_info, $revision_id) {
     $changed = FALSE;
     foreach ($embed_info as $field_name => $embeds) {
       $text = $entity->{$field_name}->value;
@@ -39,6 +39,11 @@ class FixMigration extends DrushCommands {
       }
     }
     if ($changed) {
+      // There is a bug that prevents saving a change in field when it matches with default revision.
+      // This is a workaround to that problem got from https://www.drupal.org/project/drupal/issues/2859042#comment-13083066
+      $entity_storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityType()->id());
+      $entity->original = $entity_storage->loadRevision($revision_id);
+
       $entity->save();
     }
   }
@@ -63,7 +68,7 @@ class FixMigration extends DrushCommands {
     foreach ($media_embeds as $id => $embed_info) {
       foreach ($embed_info['embeds'] as $revision_id => $embeds) {
         $entity_revision = $entity_storage->loadRevision($revision_id);
-        $this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds);
+        $this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds, $revision_id);
       }
     }
     // else {
