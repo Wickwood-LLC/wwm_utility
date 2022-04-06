@@ -71,19 +71,5 @@ class FixMigration extends DrushCommands {
         $this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds, $revision_id);
       }
     }
-    // else {
-    //   $wwm_field_utility = \Drupal::service('wwm_utility.field');
-    //   $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
-    //   $media_embeds = $wwm_media_utility->findD7MediaEmbeds($entity_type, $field_types, $id);
-    //   if (!empty($media_embeds[$id])) {
-    //     foreach ($media_embeds[$id]['embeds'] as $revision_id => $embeds) {
-    //       $entity_revision = $entity_storage->loadRevision($revision_id);
-    //       // $this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds);
-    //     }
-    //   }
-    //   // $entity = $entity_storage->load($id);
-    //   // $media_embeds_on_node = $wwm_media_utility->findD7MediaEmbedsInEntity($entity, $fields[$entity_type][$entity->bundle()]);
-    //   // $this->convertMediaEmbedsFromD7ToD9InEntity($entity, $media_embeds_on_node);
-    // }
   }
 }
