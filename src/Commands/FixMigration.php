@@ -3,6 +3,7 @@
 namespace Drupal\wwm_utility\Commands;
 
 use Drush\Commands\DrushCommands;
+use Drupal\wwm_utility\MediaUtility;
 
 /**
  * A Drush commandfile.
@@ -26,6 +27,10 @@ class FixMigration extends DrushCommands {
     $changed = FALSE;
     foreach ($embed_info as $field_name => $embeds) {
       $text = $entity->{$field_name}->value;
+
+      // Replace previous message if any. To protect from having message more than once.
+      $text = str_replace(MediaUtility::MEDIA_MISSING_MESSAGE, '', $text);
+
       $field_changed = FALSE;
       foreach ($embeds as $embed) {
         if (!empty($embed['new_code'])) {
