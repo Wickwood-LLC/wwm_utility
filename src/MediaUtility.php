@@ -224,10 +224,6 @@ class MediaUtility {
       // We don't support videos now, sorry!
       return;
     }
-    else if ($media->bundle() == 'document') {
-      // We don't support documents now, sorry!
-      return;
-    }
 
     if (!empty($tag_info['field_detas'])) {
       $fields = end($tag_info['field_detas']);
