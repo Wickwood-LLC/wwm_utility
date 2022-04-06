@@ -220,6 +220,15 @@ class MediaUtility {
       }
     }
 
+    if ($media->bundle() == 'video') {
+      // We don't support videos now, sorry!
+      return;
+    }
+    else if ($media->bundle() == 'document') {
+      // We don't support documents now, sorry!
+      return;
+    }
+
     if (!empty($tag_info['field_detas'])) {
       $fields = end($tag_info['field_detas']);
     }
@@ -295,14 +304,6 @@ class MediaUtility {
       $display = 'entity_reference:generic_media_link';
       // In D7, there appears to be no way to give separate title for link.
       $display_settings['use_url_as_link_text'] = 1;
-    }
-    else if ($media->bundle() == 'video') {
-      // We don't support videos now, sorry!
-      return;
-    }
-    else if ($media->bundle() == 'document') {
-      // We don't support documents now, sorry!
-      return;
     }
 
     $element->setAttribute('data-entity-embed-display', $display);
