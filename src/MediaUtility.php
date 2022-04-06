@@ -12,6 +12,8 @@ class MediaUtility {
 
   protected $embed_view_modes;
 
+  const MEDIA_MISSING_MESSAGE = '<strong style="color: red;">Embedded Media that should go here was deleted on Drupal 7 site and therefore could not me migrated to this site.  Below is original D7 code in case you find it useful to find a replace</strong>';
+
   use StringTranslationTrait;
 
   public function getD7ViewModesFound() {
@@ -200,6 +202,7 @@ class MediaUtility {
   }
 
   public function convertD7MediaEmbedToD9($media_embed_code) {
+    $original_embed_code = $media_embed_code;
     $media_embed_code = str_replace("[[", "", $media_embed_code);
     $media_embed_code = str_replace("]]", "", $media_embed_code);
     $tag_info = Json::decode($media_embed_code);
@@ -207,7 +210,14 @@ class MediaUtility {
     $media_storage = \Drupal::entityTypeManager()->getStorage('media');
     $media = $media_storage->load($tag_info['fid']);
     if (!$media) {
-      return;
+      $database = \Drupal::database();
+      $result = $database->query("SELECT original_fid FROM {duplicate_files} WHERE fid = :fid", [':fid' => $tag_info['fid']])->fetchField();
+      if ($result) {
+        $media = $media_storage->load($result);
+      }
+      else {
+        return static::MEDIA_MISSING_MESSAGE . "\n" . $original_embed_code;
+      }
     }
 
     if (!empty($tag_info['field_detas'])) {
