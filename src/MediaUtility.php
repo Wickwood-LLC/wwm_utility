@@ -12,7 +12,7 @@ class MediaUtility {
 
   protected $embed_view_modes;
 
-  const MEDIA_MISSING_MESSAGE = '<strong style="color: red;">Embedded Media that should go here was deleted on Drupal 7 site and therefore could not me migrated to this site.  Below is original D7 code in case you find it useful to find a replace</strong>';
+  const MEDIA_MISSING_MESSAGE = '<strong class="missing-media-message" style="color: red;">Embedded Media that should go here was deleted on Drupal 7 site and therefore could not be migrated to this site. Below is original D7 code in case you find it useful to find a replacement.</strong>';
 
   use StringTranslationTrait;
 
