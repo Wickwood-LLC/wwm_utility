@@ -3,6 +3,7 @@
 namespace Drupal\wwm_utility\Commands;
 
 use Drush\Commands\DrushCommands;
+use Drupal\field\Entity\FieldConfig;
 
 /**
  * A Drush commandfile.
@@ -24,9 +25,9 @@ class FieldUpdate extends DrushCommands {
 
   /**
    * Convert D7 format media embeds to D9.
-   * 
+   *
    * @command set-single-text-format-on-field
-   * 
+   *
    * @param string $entity_type
    *  Type of entity to work on. Usually node.
    * @param string $bundle
@@ -103,5 +104,118 @@ class FieldUpdate extends DrushCommands {
 
       $entity->save();
     }
+  }
+
+  /**
+   * Get usage of a text format on content.
+   *
+   * @command get-text-format-usage
+   *
+   * @param string $format
+   *  Format to be queried for.
+   * @param string $field_types
+   *  Comma separated names of field types to work on. Usually "text,text_long,text_with_summary"
+   * @param string $entity_type
+   *  Type of entity to work on. Usually node.
+   * @param string $bundle
+   *  Type of bundle to work on. It can be more than one with comma separated.
+   */
+  public function getTextFormatUsage($format, $field_types, $entity_type, $bundle = NULL) {
+
+    $field_types = explode(',', $field_types);
+
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type);
+    $entity_storage = $entity_type_manager->getStorage($entity_type);
+
+    $types = \Drupal::entityTypeManager()
+      ->getStorage($entity_definition->getBundleEntityType())
+      ->loadMultiple();
+
+    $wwm_field_utility = \Drupal::service('wwm_utility.field');
+
+    $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
+
+    $query = \Drupal::entityQuery($entity_type);
+    if ($bundle) {
+      $bundles = explode(',', $bundle);
+      $query->condition($entity_definition->getKey('bundle'), $bundles, 'IN');
+    }
+    else {
+      $types = \Drupal::entityTypeManager()
+      ->getStorage($entity_definition->getBundleEntityType())
+      ->loadMultiple();
+      $bundles = [];
+      foreach ($types as $type_name => $type) {
+        $bundles[] = $type_name;
+      }
+    }
+
+    $usage_in_field_settings = [];
+    if (\Drupal::moduleHandler()->moduleExists('allowed_formats')) {
+      foreach ($bundles as $type) {
+        if (!empty($fields[$entity_type][$type])) {
+          foreach ($fields[$entity_type][$type] as $field) {
+            $field_instance = FieldConfig::loadByName($entity_type, $type, $field);
+            $allowed_formats = $field_instance->getThirdPartySetting('allowed_formats', 'allowed_formats');
+            if ($allowed_formats && in_array($format, $allowed_formats)) {
+              $usage_in_field_settings[$entity_type][$type][] = $field;
+            }
+          }
+        }
+      }
+    }
+
+    $results = $query->execute();
+
+    $usage = [];
+    foreach ($results as $entity_id) {
+      $entity = $entity_storage->load($entity_id);
+      if (!empty($fields[$entity_type][$entity->bundle()])) {
+
+        $usage[$entity_id]['bundle'] = $entity->bundle();
+        $entity_type_entity = $entity->getEntityType();
+
+        $revisions = $entity_storage->getQuery()
+          ->allRevisions()
+          ->condition($entity_type_entity->getKey('id'), $entity->id())
+          ->sort($entity_type_entity->getKey('revision'), 'DESC')
+          ->execute();
+
+        foreach ($revisions as $revision_id => $entity_id) {
+          $revision = $entity_storage->loadRevision($revision_id);
+
+          foreach ($fields[$entity_type][$entity->bundle()] as $field) {
+            if ($revision->{$field}->format == $format) {
+              $usage[$entity_id]['revisions'][$revision_id][] = $field;
+            }
+          }
+        }
+        if (empty($usage[$entity_id]['revisions'])) {
+          unset($usage[$entity_id]);
+        }
+      }
+    }
+
+    $module_handler = \Drupal::service('module_handler');
+    $module_path = $module_handler->getModule('wwm_utility')->getPath();
+
+    $loader = new \Twig\Loader\FilesystemLoader([$module_path . '/templates']);
+    $twig = new \Twig\Environment($loader);
+
+    $file_handle = fopen('text-format-usage-report.html', 'w');
+    fwrite(
+      $file_handle,
+      $twig->render(
+        'text-format-usage-report.html.twig',
+        [
+          'entity_type' => $entity_type,
+          'format' => $format,
+          'usage_in_configuration' => $usage_in_field_settings,
+          'usage_in_content' => $usage,
+        ]
+      )
+    );
+    fclose($file_handle);
   }
 }
