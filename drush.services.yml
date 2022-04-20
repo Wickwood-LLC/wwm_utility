@@ -7,3 +7,7 @@ services:
     class: \Drupal\wwm_utility\Commands\FieldUpdate
     tags:
       - { name: drush.command }
+  wwm_utility.revisions:
+    class: \Drupal\wwm_utility\Commands\Revision
+    tags:
+      - { name: drush.command }
