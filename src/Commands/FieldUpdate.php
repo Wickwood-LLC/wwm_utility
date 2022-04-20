@@ -102,6 +102,10 @@ class FieldUpdate extends DrushCommands {
       $entity_storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityType()->id());
       $entity->original = $entity_storage->loadRevision($revision_id);
 
+      $entity->setNewRevision(FALSE);
+      // Set syncing so no new revision will be created by content moderation process.
+      // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
+      $entity->setSyncing(TRUE);
       $entity->save();
     }
   }
