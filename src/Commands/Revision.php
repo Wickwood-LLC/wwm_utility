@@ -106,12 +106,14 @@ class Revision extends DrushCommands {
       $nid = $this->d9_database->query("SELECT nid FROM {node} ORDER BY nid ASC LIMIT 1")->fetchField();
 
       do {
+        $this->logger()->notice(dt('Processing node with ID @nid...', ['@nid' => $nid]));
         $this->discardExtraRevisionsAndRestForOneNode($nid);
         
         $nid = $this->d9_database->query("SELECT nid FROM {node} WHERE nid > :nid ORDER BY nid ASC LIMIT 1", [':nid' => $nid])->fetchField();
       } while ($nid);
     }
     else {
+      $this->logger()->notice(dt('Processing node with ID @nid...', ['@nid' => $nid]));
       $this->discardExtraRevisionsAndRestForOneNode($nid);
     }
   }
