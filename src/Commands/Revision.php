@@ -68,7 +68,7 @@ class Revision extends DrushCommands {
 
     $revision = $entity_storage->loadRevision($revision_id);
 
-    $revision->isDefaultRevision(TRUE);
+    // $revision->isDefaultRevision(TRUE);
     $revision->setNewRevision(FALSE);
     // Set syncing so no new revision will be created by content moderation process.
     // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
