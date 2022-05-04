@@ -62,6 +62,9 @@ class MediaUtility {
       'scale_560x315' => [
         'image_style' => 'image_large_16x9',
       ],
+      'scale_320x180' => [
+        'image_style' => 'image_medium_16x9',
+      ],
     ];
   }
 
