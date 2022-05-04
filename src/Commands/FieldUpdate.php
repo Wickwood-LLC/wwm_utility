@@ -97,6 +97,7 @@ class FieldUpdate extends DrushCommands {
       }
     }
     if ($entity_changed) {
+      $this->logger()->notice(dt('Saving content after setting text format "@title"...', ['@title' => $entity->label()]));
       // There is a bug that prevents saving a change in field when it matches with default revision.
       // This is a workaround to that problem got from https://www.drupal.org/project/drupal/issues/2859042#comment-13083066
       $entity_storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityType()->id());
