@@ -223,4 +223,63 @@ class FieldUpdate extends DrushCommands {
     );
     fclose($file_handle);
   }
+
+  /**
+   * This command helps to simply save contents. Mainly to cause recomputing of computed fields.
+   *
+   * @command wwm:re-save-contents
+   *
+   * @param string $entity_type
+   *  Entity type
+   * @param string $bundle
+   *  Optional. Type of bundle to work on.
+   */
+  public function reSaveContents($entity_type, $bundle = NULL) {
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type);
+    $entity_storage = $entity_type_manager->getStorage($entity_type);
+
+    $query = \Drupal::entityQuery($entity_type);
+    if ($bundle) {
+      $query->condition($entity_definition->getKey('bundle'), $bundle);
+    }
+    // We don't want to process any item with id '0'. Specifically user 0 is anonymous user
+    $query->condition($entity_definition->getKey('id'), 0, '>');
+    $results = $query->sort($entity_definition->getKey('id') , 'ASC')
+      ->range(0, 1)
+      ->execute();
+    if (!empty($results)) {
+      $next_id = reset($results);
+
+      do {
+        $this->logger()->notice(dt('Loading and saving item with id "@id"...', ['@id' => $next_id]));
+
+        $entity = $entity_storage->load($next_id);
+        if ($entity_definition->hasKey('revision')) {
+          $entity->setNewRevision(FALSE);
+          // Set syncing so no new revision will be created by content moderation process.
+          // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
+          $entity->setSyncing(TRUE);
+        }
+        $entity->save();
+
+        $query = \Drupal::entityQuery($entity_type);
+        if ($bundle) {
+          $query->condition($entity_definition->getKey('bundle'), $bundle);
+        }
+        $query->condition($entity_definition->getKey('id'), $next_id, '>');
+        $results = $query->sort($entity_definition->getKey('id') , 'ASC')
+          ->range(0, 1)
+          ->execute();
+
+        if (!empty($results)) {
+          $next_id = reset($results);
+        }
+        else {
+          $next_id = NULL;
+        }
+
+      } while ($next_id);
+    }
+  }
 }
