@@ -74,8 +74,10 @@ class FixMigration extends DrushCommands {
     $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type);
 
     $media_embeds = $wwm_media_utility->findD7MediaEmbeds($entity_type, $field_types, $id);
+    $this->logger()->notice(dt('Prepared list of @entity_type revisions to work on.', ['@entity_type' => $entity_type]));
     foreach ($media_embeds as $id => $embed_info) {
       foreach ($embed_info['embeds'] as $revision_id => $embeds) {
+        $this->logger()->notice(dt('Converting embed codes on @revision of @entity_type @id"...', ['@revision' => $revision_id, '@entity_type' => $entity_type, '@id' => $id]));
         $entity_revision = $entity_storage->loadRevision($revision_id);
         $this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds, $revision_id);
       }
