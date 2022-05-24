@@ -11,3 +11,7 @@ services:
     class: \Drupal\wwm_utility\Commands\Revision
     tags:
       - { name: drush.command }
+  wwm_utility.development:
+    class: \Drupal\wwm_utility\Commands\Development
+    tags:
+      - { name: drush.command }
