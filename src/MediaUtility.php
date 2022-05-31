@@ -75,12 +75,20 @@ class MediaUtility {
    */
   public function findD7MediaEmbedsInEntity(FieldableEntityInterface $entity, $fields) {
     $entity_type = $entity->getEntityType();
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type->id());
+
     $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type->id());
-    $revisions = $entity_storage->getQuery()
-      ->allRevisions()
-      ->condition($entity_type->getKey('id'), $entity->id())
-      ->sort($entity_type->getKey('revision'), 'DESC')
-      ->execute();
+    if ($entity_definition->hasKey('revision')) {
+      $revisions = $entity_storage->getQuery()
+        ->allRevisions()
+        ->condition($entity_type->getKey('id'), $entity->id())
+        ->sort($entity_type->getKey('revision'), 'DESC')
+        ->execute();
+    }
+    else {
+      $revisions = [$entity->id() => $entity->id()];
+    }
 
     $pattern = '/\[\[\{.*?"type":"media".*?\}\]\]/s';
     $database = \Drupal::database();
@@ -95,7 +103,12 @@ class MediaUtility {
     $media_storage = \Drupal::entityTypeManager()->getStorage('media');
 
     foreach ($revisions as $revision_id => $entity_id) {
-      $revision = $entity_storage->loadRevision($revision_id);
+      if ($entity_definition->hasKey('revision')) {
+        $revision = $entity_storage->loadRevision($revision_id);
+      }
+      else {
+        $revision = $entity;
+      }
       foreach ($fields as $field_name) {
         if ($revision->{$field_name}->value) {
           preg_match_all($pattern, $revision->{$field_name}->value, $matches);

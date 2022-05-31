@@ -47,9 +47,13 @@ class FixMigration extends DrushCommands {
       // There is a bug that prevents saving a change in field when it matches with default revision.
       // This is a workaround to that problem got from https://www.drupal.org/project/drupal/issues/2859042#comment-13083066
       $entity_storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityType()->id());
-      $entity->original = $entity_storage->loadRevision($revision_id);
+      $entity_type_manager = \Drupal::entityTypeManager();
+      $entity_definition = $entity_type_manager->getDefinition($entity->getEntityType()->id());
+      if ($entity_definition->hasKey('revision')) {
+        $entity->original = $entity_storage->loadRevision($revision_id);
 
-      $entity->setNewRevision(FALSE);
+        $entity->setNewRevision(FALSE);
+      }
       // Set syncing so no new revision will be created by content moderation process.
       // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
       $entity->setSyncing(TRUE);
@@ -72,13 +76,21 @@ class FixMigration extends DrushCommands {
     $wwm_media_utility = \Drupal::service('wwm_utility.media');
 
     $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type);
 
     $media_embeds = $wwm_media_utility->findD7MediaEmbeds($entity_type, $field_types, $id);
     $this->logger()->notice(dt('Prepared list of @entity_type revisions to work on.', ['@entity_type' => $entity_type]));
     foreach ($media_embeds as $id => $embed_info) {
       foreach ($embed_info['embeds'] as $revision_id => $embeds) {
         $this->logger()->notice(dt('Converting embed codes on @revision of @entity_type @id"...', ['@revision' => $revision_id, '@entity_type' => $entity_type, '@id' => $id]));
-        $entity_revision = $entity_storage->loadRevision($revision_id);
+        if ($entity_definition->hasKey('revision')) {
+          $entity_revision = $entity_storage->loadRevision($revision_id);
+        }
+        else {
+          // Loading non-revisionable entity. Please note it is not revision id here, it is entity id itself.
+          $entity_revision = $entity_storage->load($revision_id);
+        }
         $this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds, $revision_id);
       }
     }
