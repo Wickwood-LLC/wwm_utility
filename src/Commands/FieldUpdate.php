@@ -4,6 +4,7 @@ namespace Drupal\wwm_utility\Commands;
 
 use Drush\Commands\DrushCommands;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * A Drush commandfile.
@@ -280,6 +281,33 @@ class FieldUpdate extends DrushCommands {
         }
 
       } while ($next_id);
+    }
+  }
+
+  /**
+   * Remove a field
+   *
+   * @command wwm:remove-field
+   */
+  public function removeField($entity_type, $bundle, $field_name) {
+    // Deleting field.
+    $field_config = FieldConfig::loadByName($entity_type, $bundle, $field_name);
+    if ($field_config) {
+      $field_config->delete();
+      $this->logger()->notice(dt('Deleted field @field of entity @entity of bundle @bundle', ['@field' => $field_name, '@entity' => $entity_type, '@bundle' => $bundle]));
+
+      // Deleting field storage.
+      $field_storage_config = FieldStorageConfig::loadByName($entity_type, $field_name);
+      if ($field_storage_config) {
+        $bundles = $field_storage_config->getBundles();
+        if (empty($bundles)) {
+          $field_storage_config->delete();
+          $this->logger()->notice(dt('Deleted field storage'));
+        }
+      }
+    }
+    else {
+      $this->logger()->notice(dt('Field @field of entity @entity of bundle @bundle does not exist', ['@field' => $field_name, '@entity' => $entity_type, '@bundle' => $bundle]));
     }
   }
 }
