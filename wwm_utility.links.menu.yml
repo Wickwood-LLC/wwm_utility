@@ -1,0 +1,5 @@
+wwm_utility.settings:
+  title: 'WWM Utility Settings'
+  description: 'Manage WWM Utility settings.'
+  route_name: wwm_utility.settings
+  parent: system.admin_config
