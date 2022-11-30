@@ -46,7 +46,7 @@ class SettingsForm extends ConfigFormBase {
       '#validate_reference' => FALSE,
       '#size' => '6',
       '#maxlength' => '60',
-      '#description' => '',
+      '#description' => $this->t('URL for the image from this image media will be available with the global token [site:global-metatag-image]'),
     ];
 
 
