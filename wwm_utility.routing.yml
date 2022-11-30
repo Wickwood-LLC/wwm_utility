@@ -1,0 +1,7 @@
+wwm_utility.settings:
+  path: '/admin/config/wwm-utility'
+  defaults:
+    _form: '\Drupal\wwm_utility\Form\SettingsForm'
+    _title: 'WWM Utility Settings'
+  requirements:
+    _permission: 'administer site configuration'
