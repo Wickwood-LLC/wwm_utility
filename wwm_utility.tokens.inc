@@ -2,34 +2,12 @@
 
 /**
  * @file
- * Tokens for the File (Field) Paths module.
+ * Tokens for WWM Utility module.
  */
 
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\media\Entity\Media;
 use Drupal\file\Entity\File;
-
-// /**
-//  * Implements hook_token_info().
-//  */
-// function bfbf_token_info() {
-//   $info['tokens']['file']['ffp-name-only'] = [
-//     'name'        => t("File name"),
-//     'description' => t("File name without extension."),
-//   ];
-
-//   $info['tokens']['file']['ffp-name-only-original'] = [
-//     'name'        => t("File name - original"),
-//     'description' => t("File name without extension - original."),
-//   ];
-
-//   $info['tokens']['file']['ffp-extension-original'] = [
-//     'name'        => t("File extension - original"),
-//     'description' => t("File extension - original."),
-//   ];
-
-//   return $info;
-// }
 
 /**
  * Implements hook_token_info_alter()
@@ -54,7 +32,6 @@ function wwm_utility_tokens($type, $tokens, array $data, array $options, Bubblea
   $replacements = [];
 
   if ($type == 'site') {
-    // $file_system = \Drupal::service('file_system');
 
     foreach ($tokens as $name => $original) {
       switch ($name) {
@@ -74,23 +51,3 @@ function wwm_utility_tokens($type, $tokens, array $data, array $options, Bubblea
 
   return $replacements;
 }
-
-/**
- * Gets the name of an image media item's source field.
- *
- * @param \Drupal\media\MediaInterface $media
- *   The media item being embedded.
- *
- * @return string|null
- *   The name of the image source field configured for the media item, or
- *   NULL if the source field is not an image field.
- */
-// function bfbf_get_media_image_source_field_name(MediaInterface $media) {
-//   $field_definition = $media->getSource()
-//     ->getSourceFieldDefinition($media->bundle->entity);
-//   $item_class = $field_definition->getItemDefinition()->getClass();
-//   if (is_a($item_class, ImageItem::class, TRUE)) {
-//     return $field_definition->getName();
-//   }
-//   return NULL;
-// }
