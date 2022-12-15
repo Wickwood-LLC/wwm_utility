@@ -315,7 +315,13 @@ class MediaUtility {
     else if ($d7_view_mode == 'media_link') {
       $display = 'entity_reference:generic_media_link';
       // In D7, there appears to be no way to give separate title for link.
-      $display_settings['use_url_as_link_text'] = 1;
+      // $display_settings['use_url_as_link_text'] = 1;
+      // Following settings as per MHCC site. Please change it depending on requrement for different site.
+      $display_settings['link_text_type'] = 'filename';
+      $display_settings['display_file_type'] = TRUE;
+      $display_settings['display_icon'] = TRUE;
+      $display_settings['display_file_size'] = TRUE;
+      $display_settings['icon_position'] = 'before';
     }
 
     $element->setAttribute('data-entity-embed-display', $display);
