@@ -225,7 +225,7 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
         'mode' => $form_display->getMode(),
       ];
 
-      field_group_attach_groups($pane_form, $context);
+      field_group_attach_groups($pane_form['user_profile'], $context);
       $pane_form['user_profile']['#process'][] = [\Drupal\field_group\FormatterHelper::class, 'formProcess'];
       $pane_form['user_profile']['#pre_render'][] = [\Drupal\field_group\FormatterHelper::class, 'formGroupPreRender'];
     }
