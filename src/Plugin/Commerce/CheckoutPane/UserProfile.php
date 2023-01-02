@@ -160,12 +160,14 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
       '#title' => $this->t('Form Mode for User Profile Edit'),
       '#default_value' => $this->configuration['user_form_mode'],
       '#options' => $form_mode_options,
+      '#description' => $this->t('Select a user form mode to be used for the profile edit form.'),
     ];
 
     $form['pane_title'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Pane Title'),
       '#default_value' => $this->configuration['pane_title'],
+      '#description' => $this->t('Specify a title for the profile edit form.'),
     ];
 
     return $form;
