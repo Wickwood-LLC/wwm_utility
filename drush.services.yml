@@ -19,3 +19,7 @@ services:
     class: \Drupal\wwm_utility\Commands\Commerce
     tags:
       - { name: drush.command }
+  wwm_utility.file:
+    class: \Drupal\wwm_utility\Commands\File
+    tags:
+      - { name: drush.command }
