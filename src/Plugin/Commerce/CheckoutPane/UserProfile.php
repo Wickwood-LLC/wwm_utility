@@ -129,6 +129,8 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
     return [
       'user_form_mode' => 'default',
       'pane_title' => 'Update User Profile',
+      'show_condition' => 'all',
+      'new_user_age' => '-1 hour',
     ] + parent::defaultConfiguration();
   }
 
@@ -136,8 +138,10 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
    * {@inheritdoc}
    */
   public function buildConfigurationSummary() {
+    $summary = $this->t('Form mode: ') . $this->configuration['user_form_mode'] . '<br>';
+    $summary .= $this->t('Pane title: ') . $this->configuration['pane_title'] . '<br>';
+    $summary .= $this->t('Show for: ') . $this->configuration['show_condition'] . '<br>';
 
-    $summary = '';
     return $summary;
   }
 
@@ -170,7 +174,47 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
       '#description' => $this->t('Specify a title for the profile edit form.'),
     ];
 
+    $form['show_condition'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Show for'),
+      '#default_value' => $this->configuration['show_condition'],
+      '#options' => [
+        'all' => $this->t('All users'),
+        'new_users' => $this->t('New users'),
+      ],
+    ];
+
+    $form['new_user_age'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('New User Since'),
+      '#default_value' => $this->configuration['new_user_age'],
+      '#description' => $this->t('Enter relative time like "-1 hour" to determine how a new user is to be determined. Please see PHP documentation at <a href="https://www.php.net/manual/en/function.strtotime.php">https://www.php.net/manual/en/function.strtotime.php</a>'),
+      '#states' => [
+        'visible' => [
+          ':input[name="configuration[panes][wwm_user_profile][configuration][show_condition]"]' => ['value' => 'new_users'],
+        ],
+      ],
+    ];
+
     return $form;
+  }
+
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+    parent::validateConfigurationForm($form, $form_state);
+
+    $values = $form_state->getValue($form['#parents']);
+
+    $parents = $form['#parents'];
+    if ($values['show_condition'] == 'new_users') {
+      if (!strtotime($values['new_user_age'])) {
+        $form_state->setError($form['new_user_age'], $this->t('Please enter a valid value.'));
+      }
+      else {
+        if (strtotime($values['new_user_age']) >= time()) {
+          $form_state->setError($form['new_user_age'], $this->t('Please enter a value will give a past time.'));
+        }
+      }
+    }
   }
 
   /**
@@ -183,6 +227,8 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
       $values = $form_state->getValue($form['#parents']);
       $this->configuration['user_form_mode'] = $values['user_form_mode'];
       $this->configuration['pane_title'] = $values['pane_title'];
+      $this->configuration['show_condition'] = $values['show_condition'];
+      $this->configuration['new_user_age'] = $values['new_user_age'];
     }
   }
 
@@ -190,7 +236,16 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
    * {@inheritdoc}
    */
   public function isVisible() {
-    return !$this->currentUser->isAnonymous();
+    if (!$this->currentUser->isAnonymous()) {
+      if ($this->configuration['show_condition'] == 'new_users') {
+        /** @var \Drupal\user\UserInterface $account */
+        $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+        if ($account->getCreatedTime() >= strtotime($this->configuration['new_user_age'])) {
+          return TRUE;
+        }
+      }
+    }
+    return FALSE;
   }
 
   /**
