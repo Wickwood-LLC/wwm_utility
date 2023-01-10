@@ -204,6 +204,13 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
       '#title' => $this->configuration['pane_title'],
     ];
 
+    $pane_form['user_profile']['update'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Update'),
+      '#op' => 'update',
+      '#weight' => 50,
+    ];
+
     /** @var \Drupal\user\UserInterface $account */
     $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
     $form_display = EntityFormDisplay::collectRenderDisplay($account, $this->configuration['user_form_mode']);
@@ -239,9 +246,9 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
   public function validatePaneForm(array &$pane_form, FormStateInterface $form_state, array &$complete_form) {
     $values = $form_state->getValue($pane_form['#parents']);
     $triggering_element = $form_state->getTriggeringElement();
-    $trigger = !empty($triggering_element['#op']) ? $triggering_element['#op'] : 'continue';
+    $trigger = !empty($triggering_element['#op']) ? $triggering_element['#op'] : 'update';
     switch ($trigger) {
-      case 'continue':
+      case 'update':
       //   return;
 
       // case 'register':
