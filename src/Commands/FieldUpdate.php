@@ -5,6 +5,7 @@ namespace Drupal\wwm_utility\Commands;
 use Drush\Commands\DrushCommands;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\file\Entity\File;
 
 /**
  * A Drush commandfile.
@@ -290,9 +291,38 @@ class FieldUpdate extends DrushCommands {
    * @command wwm:remove-field
    */
   public function removeField($entity_type, $bundle, $field_name) {
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type);
+    $entity_storage = $entity_type_manager->getStorage($entity_type);
+
     // Deleting field.
     $field_config = FieldConfig::loadByName($entity_type, $bundle, $field_name);
     if ($field_config) {
+      // Reduce file usage count.
+      if ($field_config->getType() == 'file' || $field_config->getType() == 'image') {
+        $query = \Drupal::entityQuery($entity_type);
+        if ($entity_type != 'user') {
+          // TODO: Improve this code to dynamiclly find whether entity type has bundles or not.
+          $query->condition($entity_definition->getKey('bundle'), $bundle);
+        }
+        // $results = $query->sort($entity_definition->getKey('id') , 'ASC')
+        //   ->range(0, 1)
+        //   ->execute();
+        $results = $query->execute();
+        foreach ($results as $entity_id) {
+          $entity = $entity_storage->load($entity_id);
+          if ($entity) {
+            $field_items = $entity->get($field_name);
+            foreach ($field_items as $field_item) {
+              $file = File::load($field_item->target_id);
+              if ($file) {
+                \Drupal::service('file.usage')->delete($file, 'file', $entity->getEntityTypeId(), $entity->id());
+                $this->logger()->notice(dt('Removed usage of file @fid from @entity_type:@entity_id', ['@fid' => $file->id(), '@entity_type' => $entity_type, '@entity_id' => $entity->id()]));
+              }
+            }
+          }
+        }
+      }
       $field_config->delete();
       $this->logger()->notice(dt('Deleted field @field of entity @entity of bundle @bundle', ['@field' => $field_name, '@entity' => $entity_type, '@bundle' => $bundle]));
 
