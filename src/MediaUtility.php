@@ -241,6 +241,7 @@ class MediaUtility {
       return;
     }
 
+    $fields = [];
     if (!empty($tag_info['field_detas'])) {
       $fields = end($tag_info['field_detas']);
     }
