@@ -340,4 +340,49 @@ class FieldUpdate extends DrushCommands {
       $this->logger()->notice(dt('Field @field of entity @entity of bundle @bundle does not exist', ['@field' => $field_name, '@entity' => $entity_type, '@bundle' => $bundle]));
     }
   }
+
+  /**
+   * Remove a field
+   *
+   * @command wwm:copy-field
+   */
+  public function copyField($entity_type, $bundle, $source_field, $destination_field) {
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type);
+    $entity_storage = $entity_type_manager->getStorage($entity_type);
+
+    // Deleting field.
+    $source_field_config = FieldConfig::loadByName($entity_type, $bundle, $source_field);
+    $destination_field_config = FieldConfig::loadByName($entity_type, $bundle, $destination_field);
+    if ($source_field_config && $destination_field_config) {
+
+      if ($source_field_config->getType() != $destination_field_config->getType()) {
+        $this->logger()->error(dt('Cannot copy field of type @source_type to field of type @destination_type.', [
+          '@source_type' => $source_field_config->getType(),
+          '@destination_type' => $destination_field_config->getType(),
+        ]));
+      }
+      else {
+        $query = \Drupal::entityQuery($entity_type);
+        if ($entity_type != 'user') {
+          // TODO: Improve this code to dynamiclly find whether entity type has bundles or not.
+          $query->condition($entity_definition->getKey('bundle'), $bundle);
+        }
+        $query->exists($source_field);
+        $results = $query->execute();
+        foreach ($results as $entity_id) {
+          $entity = $entity_storage->load($entity_id);
+          if ($entity) {
+            $field_items = $entity->get($source_field);
+            $entity->set($$field_items);
+            $entity->save();
+            $this->logger()->notice(dt('Copied for "@label" (@id).', ['@label' => $entity->label(), '@id' => $entity->id()]));
+          }
+        }
+      }
+    }
+    else {
+      $this->logger()->notice(dt('Could not find either or both of fields.'));
+    }
+  }
 }
