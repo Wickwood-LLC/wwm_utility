@@ -38,7 +38,7 @@ class CurrentUserWithSkippingByRoles extends ArgumentDefaultPluginBase implement
       '#title' => $this->t('Select roles for which this filter will not be applied'),
       '#default_value' => $this->options['roles'],
       '#options' => array_map('\Drupal\Component\Utility\Html::escape', user_role_names()),
-      '#description' => $this->t(''),
+      '#description' => $this->t('Filtering to current user ID will be skipped if current user having any of selected roles here. On skipping, it will return skipping value configured below.'),
     ];
 
     $form['skipping_value'] = [
