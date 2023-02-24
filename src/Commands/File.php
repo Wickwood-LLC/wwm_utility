@@ -40,9 +40,12 @@ class File extends DrushCommands {
   /**
    * This command helps to simply save contents. Mainly to cause recomputing of computed fields.
    *
+   * @param boolean $autocorrect
+   *  Optional. The file name will be autocorrected.
+   *
    * @command wwm:file-find-invalid-filenames
    */
-  public function findInvalidFileNames() {
+  public function findInvalidFileNames($autocorrect = FALSE) {
     $entity_type = 'file';
   
     $entity_type_manager = \Drupal::entityTypeManager();
@@ -71,7 +74,7 @@ class File extends DrushCommands {
             $new_name = $entity->filename->value . '.' . $extension;
           }
           $this->logger()->notice(dt( $index++ . '. Invalid file name "@filename" with id "@id". Proposed new name: @newname', ["@filename" => $entity->filename->value, '@id' => $next_id, '@newname' => $new_name]));
-          if ($extension) {
+          if ($extension && $autocorrect) {
             $entity->filename = $new_name;
             $entity->save();
             $this->logger()->notice(dt("\tApplied new name."));
