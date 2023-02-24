@@ -4,19 +4,11 @@ namespace Drupal\wwm_utility\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\file\FileStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\File\FileSystemInterface;
 
 
 class FileRenameForm extends FormBase {
-
-  /**
-   * The file storage
-   *
-   * @var \Drupal\file\FileStorage
-   */
-  protected $fileStorage;
 
   /**
    * The file entity being used by this form.
@@ -35,11 +27,10 @@ class FileRenameForm extends FormBase {
   /**
    * Constructs a new FileRenameForm.
    *
-   * @param \Drupal\file\FileStorage $file_storage
-   *   The file storage.
+   * @param \Drupal\Core\File\FileSystemInterface $file_system
+   *   The file system handler.
    */
-  public function __construct(FileStorage $file_storage, FileSystemInterface $file_system) {
-    $this->fileStorage = $file_storage;
+  public function __construct(FileSystemInterface $file_system) {
     $this->fileSystem = $file_system;
   }
 
