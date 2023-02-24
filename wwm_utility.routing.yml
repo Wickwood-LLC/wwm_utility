@@ -5,3 +5,16 @@ wwm_utility.settings:
     _title: 'WWM Utility Settings'
   requirements:
     _permission: 'administer site configuration'
+wwm_utility.file_rename_form:
+  path: '/admin/config/wwm-utility/file-rename/{file}'
+  defaults:
+    _form: '\Drupal\wwm_utility\Form\FileRenameForm'
+    _title: 'File Rename Form'
+  requirements:
+    _permission: 'administer site configuration'
+    file: \d+
+  options:
+    parameters:
+      file:
+        type: entity:file
+
