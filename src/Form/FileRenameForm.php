@@ -39,7 +39,6 @@ class FileRenameForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager')->getStorage('file'),
       $container->get('file_system')
     );
   }
