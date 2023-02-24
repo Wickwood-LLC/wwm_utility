@@ -57,17 +57,17 @@ class FileRenameForm extends FormBase {
     $this->file = $file;
     $form['fid'] = [
       '#type' => 'markup',
-      '#markup' => $this->t('File ID: @fid', ['@fid' => $this->file->id()]),
+      '#markup' => $this->t('<div>File ID: @fid</div>', ['@fid' => $this->file->id()]),
     ];
 
     $form['path'] = [
       '#type' => 'markup',
-      '#markup' => $this->t('File path: @uri', ['@uri' => $this->file->getFileUri()]),
+      '#markup' => $this->t('<div>File path: @uri</div>', ['@uri' => $this->file->getFileUri()]),
     ];
 
     $form['mime'] = [
       '#type' => 'markup',
-      '#markup' => $this->t('File mime: @mime', ['@mime' => $this->file->getMimeType()]),
+      '#markup' => $this->t('<div>File mime: @mime</div>', ['@mime' => $this->file->getMimeType()]),
     ];
     $form['new_filename'] = [
       '#type' => 'textfield',
