@@ -87,4 +87,11 @@ class ContentListingPageTitleBlock extends BlockBase {
     return $dateObj->format('F');
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge() {
+    // Need to always get correct title in wwm_utility_preprocess_page_title()
+    return 0;
+  }
 }
