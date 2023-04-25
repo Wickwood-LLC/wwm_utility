@@ -1,0 +1,13 @@
+<?php
+
+use Drupal\wwm_utility\Plugin\Block\ContentListingPageTitleBlock;
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function wwm_utility_preprocess_page_title(&$variables) {
+  $title = ContentListingPageTitleBlock::getTitle();
+  if (!empty($title)) {
+    $variables['title'] = $title;
+  }
+}
