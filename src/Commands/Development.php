@@ -87,4 +87,14 @@ class Development extends DrushCommands {
       } while ($next_id);
     }
   }
+
+  /**
+   * Rebuild Registry
+   *
+   * @command wwm:safe-flush-all-caches
+   * @bootstrap max
+   */
+  public function rebgistryRebuild() {
+    drupal_flush_all_caches();
+  }
 }
