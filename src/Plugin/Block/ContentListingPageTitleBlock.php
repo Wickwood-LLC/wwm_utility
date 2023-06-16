@@ -33,7 +33,12 @@ class ContentListingPageTitleBlock extends BlockBase {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return ['prefix' => ''];
+    return [
+      'prefix' => '',
+      'year_parameter_position' => 2,
+      'month_parameter_position' => 3,
+      'day_parameter_position' => 4,
+    ];
   }
 
   /**
@@ -45,6 +50,36 @@ class ContentListingPageTitleBlock extends BlockBase {
       '#title' => $this->t('Prefix'),
       '#default_value' => $this->configuration['prefix'],
       '#required' => TRUE,
+    ];
+
+    $form['year_parameter_position'] = [
+      '#type' => 'Year URL Parameter Position',
+      '#title' => $this->t('The numbering starts from 1, e.g. on the page admin/structure/types, the 3rd path component is "types"'),
+      '#required' => TRUE,
+      '#default_value' => $this->configuration['year_parameter_position'],
+      '#min' => 1,
+      '#max' => 50,
+      '#step' => 1,
+    ];
+
+    $form['month_parameter_position'] = [
+      '#type' => 'Year URL Parameter Position',
+      '#title' => $this->t('The numbering starts from 1, e.g. on the page admin/structure/types, the 3rd path component is "types"'),
+      '#required' => TRUE,
+      '#default_value' => $this->configuration['month_parameter_position'],
+      '#min' => 1,
+      '#max' => 50,
+      '#step' => 1,
+    ];
+
+    $form['day_parameter_position'] = [
+      '#type' => 'Year URL Parameter Position',
+      '#title' => $this->t('The numbering starts from 1, e.g. on the page admin/structure/types, the 3rd path component is "types"'),
+      '#required' => TRUE,
+      '#default_value' => $this->configuration['day_parameter_position'],
+      '#min' => 1,
+      '#max' => 50,
+      '#step' => 1,
     ];
 
     return $form;
@@ -63,19 +98,19 @@ class ContentListingPageTitleBlock extends BlockBase {
   public function build() {
     $path = \Drupal::request()->getpathInfo();
     $arg  = explode('/', trim($path, '/'));
-    if (count($arg) == 4) {
-      $year = $arg[1];
-      $month = static::monthNumberToName($arg[2]);
-      $day = $arg[3];
+    if (!empty($arg[$this->configuration['year_parameter_position'] - 1]) && !empty($arg[$this->configuration['month_parameter_position'] - 1]) && !empty($arg[$this->configuration['day_parameter_position'] - 1])) {
+      $year = $arg[$this->configuration['year_parameter_position'] - 1];
+      $month = static::monthNumberToName($arg[$this->configuration['month_parameter_position'] - 1]);
+      $day = $arg[$this->configuration['day_parameter_position'] - 1];
       static::$title = $this->t('@prefix from @month @day, @year', ['@prefix' => $this->configuration['prefix'], '@year' => $year, '@month' => $month, '@day' => $day]);
     }
-    else if (count($arg) == 3) {
-      $year = $arg[1];
-      $month = static::monthNumberToName($arg[2]);
+    else if (!empty($arg[$this->configuration['year_parameter_position'] - 1]) && !empty($arg[$this->configuration['month_parameter_position'] - 1])) {
+      $year = $arg[$this->configuration['year_parameter_position'] - 1];
+      $month = static::monthNumberToName($arg[$this->configuration['month_parameter_position'] - 1]);
       static::$title = $this->t('@prefix from @month @year', ['@prefix' => $this->configuration['prefix'], '@year' => $year, '@month' => $month]);
     }
-    else if (count($arg) == 2) {
-      $year = $arg[1];
+    else if (!empty($arg[$this->configuration['year_parameter_position'] - 1])) {
+      $year = $arg[$this->configuration['year_parameter_position'] - 1];
       static::$title = $this->t('@prefix from @year', ['@prefix' => $this->configuration['prefix'], '@year' => $year]);
     }
 
