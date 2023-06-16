@@ -53,33 +53,39 @@ class ContentListingPageTitleBlock extends BlockBase {
     ];
 
     $form['year_parameter_position'] = [
-      '#type' => 'Year URL Parameter Position',
-      '#title' => $this->t('The numbering starts from 1, e.g. on the page admin/structure/types, the 3rd path component is "types"'),
+      '#type' => 'number',
+      '#title' => $this->t('Year URL Parameter Position'),
+      '#description' => $this->t('The numbering starts from 1, e.g. on the page admin/structure/types, the 3rd path component is "types"'),
       '#required' => TRUE,
       '#default_value' => $this->configuration['year_parameter_position'],
       '#min' => 1,
       '#max' => 50,
       '#step' => 1,
+      '#size' => 3,
     ];
 
     $form['month_parameter_position'] = [
-      '#type' => 'Year URL Parameter Position',
-      '#title' => $this->t('The numbering starts from 1, e.g. on the page admin/structure/types, the 3rd path component is "types"'),
+      '#type' => 'number',
+      '#title' => $this->t('Month URL Parameter Position'),
+      '#description' => $this->t('The numbering starts from 1, e.g. on the page admin/structure/types, the 3rd path component is "types"'),
       '#required' => TRUE,
       '#default_value' => $this->configuration['month_parameter_position'],
       '#min' => 1,
       '#max' => 50,
       '#step' => 1,
+      '#size' => 3,
     ];
 
     $form['day_parameter_position'] = [
-      '#type' => 'Year URL Parameter Position',
-      '#title' => $this->t('The numbering starts from 1, e.g. on the page admin/structure/types, the 3rd path component is "types"'),
+      '#type' => 'number',
+      '#title' => $this->t('Day URL Parameter Position'),
+      '#description' => $this->t('The numbering starts from 1, e.g. on the page admin/structure/types, the 3rd path component is "types"'),
       '#required' => TRUE,
       '#default_value' => $this->configuration['day_parameter_position'],
       '#min' => 1,
       '#max' => 50,
       '#step' => 1,
+      '#size' => 3,
     ];
 
     return $form;
@@ -90,6 +96,9 @@ class ContentListingPageTitleBlock extends BlockBase {
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
     $this->configuration['prefix'] = $form_state->getValue('prefix');
+    $this->configuration['year_parameter_position'] = $form_state->getValue('year_parameter_position');
+    $this->configuration['month_parameter_position'] = $form_state->getValue('month_parameter_position');
+    $this->configuration['day_parameter_position'] = $form_state->getValue('day_parameter_position');
   }
 
   /**
