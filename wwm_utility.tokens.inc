@@ -36,13 +36,16 @@ function wwm_utility_tokens($type, $tokens, array $data, array $options, Bubblea
     foreach ($tokens as $name => $original) {
       switch ($name) {
         case 'global-metatag-image':
-          $image_media = Media::load(\Drupal::config('wwm_utility.settings')->get('global_metatag_image'));
+          $global_metatag_image_id = \Drupal::config('wwm_utility.settings')->get('global_metatag_image');
+          if (!empty($global_metatag_image_id)) {
+            $image_media = Media::load($global_metatag_image_id);
 
-          if ($image_media) {
-            $fid = $image_media->getSource()->getSourceFieldValue($image_media);
-            $file = File::load($fid);
+            if ($image_media) {
+              $fid = $image_media->getSource()->getSourceFieldValue($image_media);
+              $file = File::load($fid);
 
-            $replacements[$original] = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+              $replacements[$original] = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+            }
           }
           break;
       }

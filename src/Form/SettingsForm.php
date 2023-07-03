@@ -41,7 +41,7 @@ class SettingsForm extends ConfigFormBase {
       '#selection_settings' => [
         'include_anonymous' => FALSE,
       ],
-      '#default_value' => Media::load($config->get('global_metatag_image')),
+      '#default_value' => !empty($config->get('global_metatag_image')) ? Media::load($config->get('global_metatag_image')) : NULL,
       // Validation is done in static::validateConfigurationForm().
       '#validate_reference' => FALSE,
       '#size' => '6',
