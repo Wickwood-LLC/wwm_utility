@@ -65,6 +65,7 @@ class File extends DrushCommands {
       $next_id = reset($results);
 
       do {
+        /** @var \Drupal\file\Entity\File $entity */
         $entity = $entity_storage->load($next_id);
         $guesser = \Drupal::service('file.mime_type.guesser.extension');
         $mime_type_from_filename = $guesser->guess($entity->filename->value);
