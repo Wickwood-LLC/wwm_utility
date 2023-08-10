@@ -23,3 +23,7 @@ services:
     class: \Drupal\wwm_utility\Commands\File
     tags:
       - { name: drush.command }
+  wwm_utility.media_commands:
+    class: \Drupal\wwm_utility\Commands\Media
+    tags:
+      - { name: drush.command }
