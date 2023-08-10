@@ -400,7 +400,7 @@ class MediaUtility {
       }
       foreach ($fields as $field_name) {
         if ($revision->{$field_name}->value) {
-          $media_embeds['embeds'][$revision_id][$field_name] = $this->findMediaEmbedsInText($revision->{$field_name}->value, 'media');
+          $media_embeds['embeds'][$revision_id][$field_name] = $this->findEntityEmbedsInText($revision->{$field_name}->value, 'media');
         }
       }
     }
@@ -415,7 +415,7 @@ class MediaUtility {
    *  Text to search embeds for.
    * @param $langcode
    */
-  public function findMediaEmbedsInText($text, $embed_entity_type = NULL) {
+  public function findEntityEmbedsInText($text, $embed_entity_type = NULL) {
     // $result = new FilterProcessResult($text);
     $nodes = [];
 
