@@ -479,5 +479,45 @@ class MediaUtility {
     return $image_style_usage;
   }
 
+  /**
+   * @param string $entity_type
+   * @param array $field_types
+   */
+  public function findImageStylesInMediaEmbeds($entity_type, array $field_types, $image_style = NULL) {
+    $this->embed_view_modes = [];
 
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type);
+
+    $wwm_field_utility = \Drupal::service('wwm_utility.field');
+    $entity_storage = $entity_type_manager->getStorage($entity_type);
+
+    $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
+
+    $image_style_usage = [];
+
+    if ($image_style) {
+      $image_styles = [$image_style];
+    }
+    else {
+      $image_styles = [];
+    }
+
+    foreach ($fields as $entity_type => $bundles) {
+      foreach ($bundles as $bundle => $formatted_fields) {
+        $query = \Drupal::entityQuery($entity_type)
+          ->condition($entity_definition->getKey('bundle'), $bundle);
+
+        $results = $query->execute();
+        foreach ($results as $id) {
+          $entity = $entity_storage->load($id);
+          $image_styles_in_embeds = $this->findImageStylesUsedForEmbeds($entity, $fields[$entity_type][$bundle], $image_styles);
+          if (!empty($image_styles_in_embeds)) {
+            $image_style_usage[$entity->id()] = $image_styles_in_embeds;
+          }
+        }
+      }
+    }
+    return $image_style_usage;
+  }
 }
