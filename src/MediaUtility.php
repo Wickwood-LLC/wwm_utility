@@ -7,6 +7,7 @@ use Drupal\Component\Serialization\Json;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\responsive_image\Entity\ResponsiveImageStyle;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Component\Utility\Html;
 
 class MediaUtility {
 
@@ -360,4 +361,123 @@ class MediaUtility {
 
     return $dom->saveHTML();
   }
+
+  /**
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   * @param array $fields
+   *  Field machine names for formatted fields to look for embeds.
+   */
+  public function findMediaEmbedsInEntity(FieldableEntityInterface $entity, $fields) {
+    $entity_type = $entity->getEntityType();
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type->id());
+
+    $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type->id());
+    if ($entity_definition->hasKey('revision')) {
+      $revisions = $entity_storage->getQuery()
+        ->allRevisions()
+        ->condition($entity_type->getKey('id'), $entity->id())
+        ->sort($entity_type->getKey('revision'), 'DESC')
+        ->execute();
+    }
+    else {
+      $revisions = [$entity->id() => $entity->id()];
+    }
+
+    $media_embeds = [
+      'id' => $entity->id(),
+      'label' => $entity->label(),
+      'edit_page' => $entity->toUrl('edit-form')->toString(),
+      'embeds' => [],
+    ];
+
+    foreach ($revisions as $revision_id => $entity_id) {
+      if ($entity_definition->hasKey('revision')) {
+        $revision = $entity_storage->loadRevision($revision_id);
+      }
+      else {
+        $revision = $entity;
+      }
+      foreach ($fields as $field_name) {
+        if ($revision->{$field_name}->value) {
+          $media_embeds['embeds'][$revision_id][$field_name] = $this->findMediaEmbedsInText($revision->{$field_name}->value, 'media');
+        }
+      }
+    }
+
+    return $media_embeds;
+  }
+
+  /**
+   * Find embeded entity information.
+   *
+   * @param $text
+   *  Text to search embeds for.
+   * @param $langcode
+   */
+  public function findMediaEmbedsInText($text, $embed_entity_type = NULL) {
+    // $result = new FilterProcessResult($text);
+    $nodes = [];
+
+    if (strpos($text, 'data-entity-type') !== FALSE && (strpos($text, 'data-entity-embed-display') !== FALSE || strpos($text, 'data-view-mode') !== FALSE)) {
+      $dom = Html::load($text);
+      $xpath = new \DOMXPath($dom);
+
+      foreach ($xpath->query('//drupal-entity[@data-entity-type and (@data-entity-uuid or @data-entity-id) and (@data-entity-embed-display or @data-view-mode)]') as $node) {
+        /** @var \DOMElement $node */
+        $entity_type = $node->getAttribute('data-entity-type');
+        if ($embed_entity_type && $entity_type != $embed_entity_type) {
+          continue;
+        }
+        $nodes[] = $node;
+      }
+    }
+
+    return $nodes;
+  }
+
+  /**
+   * Find usage of image styles used for media embeds.
+   *
+   * @param FieldableEntityInterface $entity
+   *  Entity object to search fro the embeds
+   * @param array $fields
+   *  List of field names
+   * @param array $image_styles_to_find
+   *  List of image style name to restrict searching to.
+   * @return array
+   */
+  public function findImageStylesUsedForEmbeds(FieldableEntityInterface $entity, $fields, $image_styles_to_find = []) {
+    $embed_info = $this->findMediaEmbedsInEntity($entity, $fields);
+
+    $image_style_usage = [];
+    foreach ($embed_info['embeds'] as $revision_id => $revision_embeds) {
+      foreach ($revision_embeds as $field => $embeds) {
+        foreach ($embeds as $embed_node) {
+          /** @var \DOMNode $embed_node */
+
+          $display_settings = $embed_node->attributes->getNamedItem('data-entity-embed-display-settings');
+          if ($display_settings) {
+            $display_settings = json_decode($display_settings->nodeValue, TRUE);
+            if (isset($display_settings['image_style'])) {
+              $image_style = $display_settings['image_style'];
+              if (!empty($image_styles_to_find) && !in_array($image_style, $image_styles_to_find)) {
+                // Image style is not in the list given to restrict looking for.
+                continue;
+              }
+              if (isset($image_style_usage[$revision_id][$field][$image_style])) {
+                $image_style_usage[$revision_id][$field][$image_style]++;
+              }
+              else {
+                $image_style_usage[$revision_id][$field][$image_style] = 1;
+              }
+            }
+          }
+        }
+      }
+    }
+    return $image_style_usage;
+  }
+
+
 }
