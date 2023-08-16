@@ -131,6 +131,11 @@ class FieldUpdate extends DrushCommands {
 
     $field_types = explode(',', $field_types);
 
+    $bundles = [];
+    if (!empty($bundle)) {
+      $bundles = explode(',', $bundle);
+    }
+
     $entity_type_manager = \Drupal::entityTypeManager();
     $entity_definition = $entity_type_manager->getDefinition($entity_type);
     $entity_storage = $entity_type_manager->getStorage($entity_type);
@@ -144,8 +149,7 @@ class FieldUpdate extends DrushCommands {
     $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
 
     $query = \Drupal::entityQuery($entity_type);
-    if ($bundle) {
-      $bundles = explode(',', $bundle);
+    if (!empty($bundles)) {
       $query->condition($entity_definition->getKey('bundle'), $bundles, 'IN');
     }
     else {
