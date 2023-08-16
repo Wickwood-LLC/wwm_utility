@@ -247,6 +247,44 @@ class FieldUpdate extends DrushCommands {
   }
 
   /**
+   * Reaplace usage of a text format with another one.
+   *
+   * @command replace-text-format-usage
+   *
+   * @param string $format_old
+   *  Format to be replaced.
+   * @param string $format_new
+   *  Format to be replaced with.
+   * @param string $field_types
+   *  Comma separated names of field types to work on. Usually "text,text_long,text_with_summary"
+   * @param string $entity_type
+   *  Type of entity to work on. Usually node.
+   * @param string $bundle
+   *  Type of bundle to work on. It can be more than one with comma separated.
+   */
+  public function replaceTextFormatUsage($format_old, $format_new, $field_types, $entity_type, $bundle = NULL) {
+
+    $field_types = explode(',', $field_types);
+
+    $bundles = [];
+    if (!empty($bundle)) {
+      $bundles = explode(',', $bundle);
+    }
+
+    $usage = self::getTextFormatUsageInEntityContents($format_old, $field_types, $entity_type, $bundles);
+
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_storage = $entity_type_manager->getStorage($entity_type);
+
+    foreach ($usage as $entity_id => $old_format_usage_data) {
+      foreach ($old_format_usage_data['revisions'] as $revision_id => $fields) {
+        $entity_revision = $entity_storage->loadRevision($revision_id);
+        $this->setTextFormatOnField($entity_revision, $fields, $format_new, $revision_id);
+      }
+    }
+  }
+
+  /**
    * This command helps to simply save contents. Mainly to cause recomputing of computed fields.
    *
    * @command wwm:re-save-contents
