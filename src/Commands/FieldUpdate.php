@@ -114,35 +114,12 @@ class FieldUpdate extends DrushCommands {
   }
 
   /**
-   * Get usage of a text format on content.
-   *
-   * @command get-text-format-usage
-   *
-   * @param string $format
-   *  Format to be queried for.
-   * @param string $field_types
-   *  Comma separated names of field types to work on. Usually "text,text_long,text_with_summary"
-   * @param string $entity_type
-   *  Type of entity to work on. Usually node.
-   * @param string $bundle
-   *  Type of bundle to work on. It can be more than one with comma separated.
+   * This is utility method mainly built to help slef::getTextFormatUsage()
    */
-  public function getTextFormatUsage($format, $field_types, $entity_type, $bundle = NULL) {
-
-    $field_types = explode(',', $field_types);
-
-    $bundles = [];
-    if (!empty($bundle)) {
-      $bundles = explode(',', $bundle);
-    }
-
+  public static function getTextFormatUsageInEntityContents($format, $field_types, $entity_type, $bundles = []) {
     $entity_type_manager = \Drupal::entityTypeManager();
-    $entity_definition = $entity_type_manager->getDefinition($entity_type);
     $entity_storage = $entity_type_manager->getStorage($entity_type);
-
-    $types = \Drupal::entityTypeManager()
-      ->getStorage($entity_definition->getBundleEntityType())
-      ->loadMultiple();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type);
 
     $wwm_field_utility = \Drupal::service('wwm_utility.field');
 
@@ -151,30 +128,6 @@ class FieldUpdate extends DrushCommands {
     $query = \Drupal::entityQuery($entity_type);
     if (!empty($bundles)) {
       $query->condition($entity_definition->getKey('bundle'), $bundles, 'IN');
-    }
-    else {
-      $types = \Drupal::entityTypeManager()
-      ->getStorage($entity_definition->getBundleEntityType())
-      ->loadMultiple();
-      $bundles = [];
-      foreach ($types as $type_name => $type) {
-        $bundles[] = $type_name;
-      }
-    }
-
-    $usage_in_field_settings = [];
-    if (\Drupal::moduleHandler()->moduleExists('allowed_formats')) {
-      foreach ($bundles as $type) {
-        if (!empty($fields[$entity_type][$type])) {
-          foreach ($fields[$entity_type][$type] as $field) {
-            $field_instance = FieldConfig::loadByName($entity_type, $type, $field);
-            $allowed_formats = $field_instance->getThirdPartySetting('allowed_formats', 'allowed_formats');
-            if ($allowed_formats && in_array($format, $allowed_formats)) {
-              $usage_in_field_settings[$entity_type][$type][] = $field;
-            }
-          }
-        }
-      }
     }
 
     $results = $query->execute();
@@ -204,6 +157,69 @@ class FieldUpdate extends DrushCommands {
         }
         if (empty($usage[$entity_id]['revisions'])) {
           unset($usage[$entity_id]);
+        }
+      }
+    }
+    return $usage;
+  }
+
+  /**
+   * Get usage of a text format on content.
+   *
+   * @command get-text-format-usage
+   *
+   * @param string $format
+   *  Format to be queried for.
+   * @param string $field_types
+   *  Comma separated names of field types to work on. Usually "text,text_long,text_with_summary"
+   * @param string $entity_type
+   *  Type of entity to work on. Usually node.
+   * @param string $bundle
+   *  Type of bundle to work on. It can be more than one with comma separated.
+   */
+  public function getTextFormatUsage($format, $field_types, $entity_type, $bundle = NULL) {
+
+    $field_types = explode(',', $field_types);
+
+    $bundles = [];
+    if (!empty($bundle)) {
+      $bundles = explode(',', $bundle);
+    }
+
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_definition = $entity_type_manager->getDefinition($entity_type);
+
+    $types = \Drupal::entityTypeManager()
+      ->getStorage($entity_definition->getBundleEntityType())
+      ->loadMultiple();
+
+    $wwm_field_utility = \Drupal::service('wwm_utility.field');
+
+    $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
+
+    $usage = self::getTextFormatUsageInEntityContents($format, $field_types, $entity_type, $bundles);
+
+    if (empty($bundles)) {
+      $types = \Drupal::entityTypeManager()
+      ->getStorage($entity_definition->getBundleEntityType())
+      ->loadMultiple();
+      $bundles = [];
+      foreach ($types as $type_name => $type) {
+        $bundles[] = $type_name;
+      }
+    }
+
+    $usage_in_field_settings = [];
+    if (\Drupal::moduleHandler()->moduleExists('allowed_formats')) {
+      foreach ($bundles as $type) {
+        if (!empty($fields[$entity_type][$type])) {
+          foreach ($fields[$entity_type][$type] as $field) {
+            $field_instance = FieldConfig::loadByName($entity_type, $type, $field);
+            $allowed_formats = $field_instance->getThirdPartySetting('allowed_formats', 'allowed_formats');
+            if ($allowed_formats && in_array($format, $allowed_formats)) {
+              $usage_in_field_settings[$entity_type][$type][] = $field;
+            }
+          }
         }
       }
     }
