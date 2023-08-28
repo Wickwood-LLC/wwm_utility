@@ -3,7 +3,7 @@
 namespace Drupal\wwm_utility\Commands;
 
 use Drush\Commands\DrushCommands;
-// use Drupal\wwm_utility\MediaUtility;
+use Drupal\Core\Database\ConnectionNotDefinedException;
 
 /**
  * A Drush commandfile.
@@ -25,7 +25,9 @@ class Revision extends DrushCommands {
   /**
    */
   public function __construct() {
-    $this->d7_database = \Drupal\Core\Database\Database::getConnection('default', 'migrate');
+    if (\Drupal\Core\Database\Database::getConnectionInfo('migrate')) {
+      $this->d7_database = \Drupal\Core\Database\Database::getConnection('default', 'migrate');
+    }
 
     // Ensure connection to default database.
     \Drupal\Core\Database\Database::setActiveConnection();
@@ -38,6 +40,9 @@ class Revision extends DrushCommands {
   }
 
   public function getExtraRevisionsOfNode($nid) {
+    if (!$this->d7_database) {
+      throw new ConnectionNotDefinedException('No connection to the D7 database');
+    }
     $d7_vids = $this->d7_database->query("SELECT vid FROM {node_revision} WHERE nid = :nid", [':nid' => $nid])->fetchCol();
     $d9_vids = $this->d9_database->query("SELECT vid FROM {node_revision} WHERE nid = :nid", [':nid' => $nid])->fetchCol();
 
@@ -45,6 +50,9 @@ class Revision extends DrushCommands {
   }
 
   public function getCurrentRevisionIDOfNodeInD7($nid) {
+    if (!$this->d7_database) {
+      throw new ConnectionNotDefinedException('No connection to the D7 database');
+    }
     return $this->d7_database->query("SELECT vid FROM {node} WHERE nid = :nid", [':nid' => $nid])->fetchField();
   }
 

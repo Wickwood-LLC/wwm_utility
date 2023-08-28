@@ -20,13 +20,9 @@ class Development extends DrushCommands {
 
   protected $d9_database;
 
-  protected $d7_database;
-
   /**
    */
   public function __construct() {
-    $this->d7_database = \Drupal\Core\Database\Database::getConnection('default', 'migrate');
-
     // Ensure connection to default database.
     \Drupal\Core\Database\Database::setActiveConnection();
     $this->d9_database = \Drupal::database();
