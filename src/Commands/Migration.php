@@ -40,7 +40,7 @@ class Migration extends DrushCommands {
    *
    * @command wwm:list-migrations-executed
    */
-  public function listMigrations() {
+  public function listMigrations($group = 'migrate_drupal_7') {
     $entity_type = 'migration';
 
     $entity_type_manager = \Drupal::entityTypeManager();
@@ -48,7 +48,7 @@ class Migration extends DrushCommands {
 
     $query = \Drupal::entityQuery($entity_type);
 
-    $query->condition('migration_group', 'migrate_drupal_7');
+    $query->condition('migration_group', $group);
     // $query->sort($entity_definition->getKey('id') , 'ASC');
     $results = $query->execute();
 
