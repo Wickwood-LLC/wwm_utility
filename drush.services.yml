@@ -27,3 +27,7 @@ services:
     class: \Drupal\wwm_utility\Commands\Media
     tags:
       - { name: drush.command }
+  wwm_utility.migration:
+    class: \Drupal\wwm_utility\Commands\Migration
+    tags:
+      - { name: drush.command }
