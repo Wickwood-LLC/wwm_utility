@@ -40,8 +40,9 @@ class Migration extends DrushCommands {
    *
    * @command wwm:list-migrations-executed
    * @option executed List only executed migrations.
+   * @option commands List migrate import commands
    */
-  public function listMigrations($group = 'migrate_drupal_7', array $options = ['executed' => TRUE]) {
+  public function listMigrations($group = 'migrate_drupal_7', array $options = ['executed' => TRUE, 'commands' => FALSE]) {
     $entity_type = 'migration';
 
     $entity_type_manager = \Drupal::entityTypeManager();
@@ -83,12 +84,19 @@ class Migration extends DrushCommands {
       unset($row['last_imported']);
     }
 
-    $output = new ConsoleOutput();
-    $table = new Table($output);
-    $table
-      ->setHeaders(['Migration', 'Last Imported'])
-      ->setRows($migrations_processed);
-    $table->render();
+    $output = new ConsoleOutput();$output = new ConsoleOutput();
+    if (!$options['commands'])  {
+      $table = new Table($output);
+      $table
+        ->setHeaders(['Migration', 'Last Imported'])
+        ->setRows($migrations_processed);
+      $table->render();
+    }
+    else {
+      foreach ($migrations_processed as $migration) {
+        $output->writeln('drush migrate-import ' . $migration['migration_id'] . ' --execute-dependencies --group="' . $group . '"');
+      }
+    }
 
     print("Total $count migrations.") . PHP_EOL;
   }
