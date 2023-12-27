@@ -430,8 +430,9 @@ class FieldUpdate extends DrushCommands {
         foreach ($results as $entity_id) {
           $entity = $entity_storage->load($entity_id);
           if ($entity) {
+            /** @var \Drupal\Core\Field\FieldItemList $field_items */
             $field_items = $entity->get($source_field);
-            $entity->set($$field_items);
+            $entity->set($destination_field, $field_items->getValue());
             $entity->save();
             $this->logger()->notice(dt('Copied for "@label" (@id).', ['@label' => $entity->label(), '@id' => $entity->id()]));
           }
