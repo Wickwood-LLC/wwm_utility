@@ -400,7 +400,7 @@ class FieldUpdate extends DrushCommands {
   }
 
   /**
-   * Remove a field
+   * Copy values from on field to another in same entity.
    *
    * @command wwm:copy-field
    */
@@ -409,7 +409,6 @@ class FieldUpdate extends DrushCommands {
     $entity_definition = $entity_type_manager->getDefinition($entity_type);
     $entity_storage = $entity_type_manager->getStorage($entity_type);
 
-    // Deleting field.
     $source_field_config = FieldConfig::loadByName($entity_type, $bundle, $source_field);
     $destination_field_config = FieldConfig::loadByName($entity_type, $bundle, $destination_field);
     if ($source_field_config && $destination_field_config) {
