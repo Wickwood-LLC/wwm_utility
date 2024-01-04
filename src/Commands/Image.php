@@ -11,7 +11,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class Image extends DrushCommands {
 
   /**
-   * To copy missing title text from a field to title property of a image field.
+   * To copy text from a field to property of an image field.
+   * To use on image fields that were having separate fields in D7 for text and alt properties
    *
    * @param string $entity_type
    *  Entity type
@@ -19,12 +20,12 @@ class Image extends DrushCommands {
    *  Entity bundle
    * @param string $image_field
    *  Image field to be updated
-   * @param string $title_text_field
-   *  Title text field to copy value from
+   * @param string $source_field
+   *  Source text field to copy value from
    *
-   * @command wwm:image-field-copy-title-text
+   * @command wwm:image-field-populate-property
    */
-  public function copyTitleTextToImageField($entity_type, $bundle, $image_field, $title_text_field) {
+  public function copyPropertyTextToImageField($entity_type, $bundle, $image_field, $source_field, $image_field_property) {
     $io = new SymfonyStyle($this->input, $this->output);
   
     $entity_type_manager = \Drupal::entityTypeManager();
@@ -35,17 +36,17 @@ class Image extends DrushCommands {
       ->allRevisions()
       ->condition($entity_definition->getKey('bundle'), $bundle)
       // Source field value exists
-      ->exists($title_text_field)
-      // Target title property of the image field not set
-      ->condition($image_field . '.title', '')
+      ->exists($source_field)
+      // Target property of the image field not set
+      ->condition($image_field . '.' . $image_field_property, '')
       ->accessCheck(FALSE)
       ->execute();
 
     $count = 0;
     foreach ($result as $revision_id => $entity_id) {
       $revision = $entity_storage->loadRevision($revision_id);
-      $title = $revision->{$title_text_field}->value;
-      $revision->{$image_field}->title = $title;
+      $value = $revision->{$source_field}->value;
+      $revision->{$image_field}->{$image_field_property} = $value;
       $revision->setNewRevision(FALSE);
       // Set syncing so no new revision will be created by content moderation process.
       // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
