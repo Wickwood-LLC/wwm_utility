@@ -417,6 +417,18 @@ class FieldUpdate extends DrushCommands {
 
     $source_field_config = FieldConfig::loadByName($entity_type, $bundle, $source_field);
     $destination_field_config = FieldConfig::loadByName($entity_type, $bundle, $destination_field);
+
+    if (!$source_field_config) {
+      $this->logger()->error(dt('Source field @field does not exist!', [
+        '@field' => $source_field,
+      ]));
+    }
+    if (!$destination_field_config) {
+      $this->logger()->error(dt('Source field @field does not exist!', [
+        '@field' => $destination_field,
+      ]));
+    }
+
     if ($source_field_config && $destination_field_config) {
 
       if ($source_field_config->getType() != $destination_field_config->getType() &&
@@ -438,6 +450,9 @@ class FieldUpdate extends DrushCommands {
         }
         $query->exists($source_field);
         $results = $query->execute();
+        if (empty($results)) {
+          $this->logger()->notice(dt('Not items to copy'));
+        }
         foreach ($results as $entity_id) {
           $entity = $entity_storage->load($entity_id);
           if ($entity) {
