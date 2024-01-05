@@ -409,11 +409,22 @@ class FieldUpdate extends DrushCommands {
     $entity_definition = $entity_type_manager->getDefinition($entity_type);
     $entity_storage = $entity_type_manager->getStorage($entity_type);
 
+    $compatible_field_types = [
+      'string' => [
+        'text_long',
+      ],
+    ];
+
     $source_field_config = FieldConfig::loadByName($entity_type, $bundle, $source_field);
     $destination_field_config = FieldConfig::loadByName($entity_type, $bundle, $destination_field);
     if ($source_field_config && $destination_field_config) {
 
-      if ($source_field_config->getType() != $destination_field_config->getType()) {
+      if ($source_field_config->getType() != $destination_field_config->getType() &&
+        (
+          !isset($compatible_field_types[$source_field_config->getType()]) ||
+          !in_array($destination_field_config->getType(), $compatible_field_types[$source_field_config->getType()])
+        )
+      ) {
         $this->logger()->error(dt('Cannot copy field of type @source_type to field of type @destination_type.', [
           '@source_type' => $source_field_config->getType(),
           '@destination_type' => $destination_field_config->getType(),
