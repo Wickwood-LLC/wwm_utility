@@ -34,7 +34,7 @@ class File extends DrushCommands {
   }
 
   /**
-   * This command helps to simply save contents. Mainly to cause recomputing of computed fields.
+   * Find file entities having file names not matching its mime type.
    *
    * @param boolean $autocorrect
    *  Optional. The file name will be autocorrected.

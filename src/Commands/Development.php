@@ -34,11 +34,11 @@ class Development extends DrushCommands {
   }
 
   /**
-   * This command helps to simply save contents. Mainly to cause recomputing of computed fields.
+   * Change user account email address to invalid addresses.
    *
    * @command wwm:dev-invalidate-user-email-addresses
    */
-  public function reSaveContents() {
+  public function invalidateUserEmailAddresses() {
     $entity_type = 'user';
   
     $entity_type_manager = \Drupal::entityTypeManager();
