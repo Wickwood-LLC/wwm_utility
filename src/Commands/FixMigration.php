@@ -74,9 +74,10 @@ class FixMigration extends DrushCommands {
    */
   public function convertMediaEmbedsFromD7ToD9(
     $entity_type, $field_types,
-    array $options = ['id' => NULL]) {
+    array $options = ['id' => NULL, 'report' => NULL]) {
 
     $id = $options['id'];
+    $report = $options['report'];
 
     $field_types = explode(',', $field_types);
     /** @var \Drupal\wwm_utility\MediaUtility $wwm_media_utility */
@@ -88,18 +89,39 @@ class FixMigration extends DrushCommands {
 
     $media_embeds = $wwm_media_utility->findD7MediaEmbeds($entity_type, $field_types, $id);
     $this->logger()->notice(dt('Prepared list of @entity_type revisions to work on.', ['@entity_type' => $entity_type]));
-    foreach ($media_embeds as $id => $embed_info) {
-      foreach ($embed_info['embeds'] as $revision_id => $embeds) {
-        $this->logger()->notice(dt('Converting embed codes on @revision of @entity_type @id"...', ['@revision' => $revision_id, '@entity_type' => $entity_type, '@id' => $id]));
-        if ($entity_definition->hasKey('revision')) {
-          $entity_revision = $entity_storage->loadRevision($revision_id);
+    if (!isset($report)) {
+      foreach ($media_embeds as $id => $embed_info) {
+        foreach ($embed_info['embeds'] as $revision_id => $embeds) {
+          $this->logger()->notice(dt('Converting embed codes on @revision of @entity_type @id"...', ['@revision' => $revision_id, '@entity_type' => $entity_type, '@id' => $id]));
+          if ($entity_definition->hasKey('revision')) {
+            $entity_revision = $entity_storage->loadRevision($revision_id);
+          }
+          else {
+            // Loading non-revisionable entity. Please note it is not revision id here, it is entity id itself.
+            $entity_revision = $entity_storage->load($revision_id);
+          }
+          //$this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds, $revision_id);
         }
-        else {
-          // Loading non-revisionable entity. Please note it is not revision id here, it is entity id itself.
-          $entity_revision = $entity_storage->load($revision_id);
-        }
-        $this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds, $revision_id);
       }
+    }
+    else {
+      $module_handler = \Drupal::service('module_handler');
+      $module_path = $module_handler->getModule('wwm_utility')->getPath();
+
+      $loader = new \Twig\Loader\FilesystemLoader([$module_path . '/templates']);
+      $twig = new \Twig\Environment($loader);
+
+      $report_file = fopen($report, 'w');
+      fwrite(
+        $report_file,
+        $twig->render(
+          'd7-media-embeds-info-report.html.twig',
+          [
+            'embed_info' => $media_embeds,
+          ]
+        )
+      );
+      fclose($report_file);
     }
   }
 }
