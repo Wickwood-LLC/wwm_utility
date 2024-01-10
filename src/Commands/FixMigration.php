@@ -73,6 +73,7 @@ class FixMigration extends DrushCommands {
    */
   public function convertMediaEmbedsFromD7ToD9($entity_type, $field_types, $id = NULL) {
     $field_types = explode(',', $field_types);
+    /** @var \Drupal\wwm_utility\MediaUtility $wwm_media_utility */
     $wwm_media_utility = \Drupal::service('wwm_utility.media');
 
     $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type);
