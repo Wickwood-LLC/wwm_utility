@@ -100,7 +100,7 @@ class FixMigration extends DrushCommands {
             // Loading non-revisionable entity. Please note it is not revision id here, it is entity id itself.
             $entity_revision = $entity_storage->load($revision_id);
           }
-          //$this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds, $revision_id);
+          $this->convertMediaEmbedsFromD7ToD9InEntity($entity_revision, $embeds, $revision_id);
         }
       }
     }
