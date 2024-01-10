@@ -70,8 +70,14 @@ class FixMigration extends DrushCommands {
    *  Type of entity to work on. Usually node.
    * @param string $field_types
    *  Comma separated names of field types to work on. Usually "text,text_long,text_with_summary"
+   * @option id Optional entity id to run only for one entity.
    */
-  public function convertMediaEmbedsFromD7ToD9($entity_type, $field_types, $id = NULL) {
+  public function convertMediaEmbedsFromD7ToD9(
+    $entity_type, $field_types,
+    array $options = ['id' => NULL]) {
+
+    $id = $options['id'];
+
     $field_types = explode(',', $field_types);
     /** @var \Drupal\wwm_utility\MediaUtility $wwm_media_utility */
     $wwm_media_utility = \Drupal::service('wwm_utility.media');
