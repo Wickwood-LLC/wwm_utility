@@ -66,6 +66,12 @@ class MediaUtility {
       'scale_320x180' => [
         'image_style' => 'image_medium_16x9',
       ],
+      'original_size_no_watermark_' => [
+        // Use original size.
+      ],
+      'teaser' => [
+        'image_style' => 'image_medium_4x3',
+      ],
     ];
   }
 
@@ -146,7 +152,7 @@ class MediaUtility {
                   $display = 'entity_reference:media_image_responsive';
                   $image_style = $image_style_replacement['image_style'];
 
-                  $embed_info['messages'][] = $this->t('Image style replacement found for "@old" is "@new"', ['@old' => $d7_view_mode, '@new' => $image_style_replacements[$d7_view_mode]['image_style']]);
+                  $embed_info['messages'][] = $this->t('Image style replacement found for "@old" is "@new"', ['@old' => $d7_view_mode, '@new' => $image_style]);
 
                   if (!empty($image_style_replacement['align'])) {
                     $align = $image_style_replacement['align'];
@@ -157,6 +163,11 @@ class MediaUtility {
                     $rotate = $image_style_replacement['rotate'];
                     $embed_info['messages'][] = $this->t('Set to rotate @rotate', ['@rotate' => $rotate]);
                   }
+                }
+                elseif (isset($image_style_replacements[$d7_view_mode])) {
+                  // It exist but no replacement image style specified,
+                  // Which means to use original size.
+                  $embed_info['messages'][] = $this->t('Original size');
                 }
                 else if ($d7_view_mode == 'default') {
                   $embed_info['messages'][] = $this->t('Original size');
@@ -303,6 +314,11 @@ class MediaUtility {
         if (!empty($image_style_replacement['rotate'])) {
           $rotate = $image_style_replacement['rotate'];
         }
+      }
+      elseif (isset($image_style_replacements[$d7_view_mode])) {
+        // It exist but no replacement image style specified,
+        // Which means to use original size.
+        $display = 'entity_reference:media_image_responsive';
       }
       else if ($d7_view_mode == 'default') {
         $display = 'entity_reference:media_image_responsive';
