@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <title>D7 Media Embeds Info Report</title>
+  </head>
+  <body>
+    {% for entity_id, entity_embed_info in embed_info %}
+      <h2>ID: {{ entity_id }}</h2>
+      <p>
+        <strong>Label:</strong> {{ entity_embed_info.label }}<br/>
+        <strong>Edit page:</strong> {{ entity_embed_info.edit_page }}<br/>
+      </p>
+      <h3>Embeds in revisions</h3>
+      {% for revision_id, revision_embed_info in entity_embed_info.embeds %}
+        <h4>Revision ID: {{ revision_id }}</h4>
+        {% for field, field_embed_info in revision_embed_info %}
+          <h5>Field: {{ field }}</h5>
+          <ul>
+          {% for item in field_embed_info %}
+            <li>
+              <dl>
+                <dt>Code</dt>
+                <dd><pre>{{ item.code }}</pre></dd>
+                <dt>New Code</dt>
+                <dd><pre>{{ item.new_code }}</pre></dd>
+                <dt>Messages</dt>
+                <dd>
+                  <ol>
+                  {% for message in item.messages %}
+                  <li>{{ message }}</li>
+                  {% endfor %}
+                  </ol>
+                </dd>
+              </dl>
+            </li>
+          {% endfor %}
+          </ul>
+        {% endfor %}
+      {% endfor %}
+    {% endfor %}
+  </body>
+</html>
