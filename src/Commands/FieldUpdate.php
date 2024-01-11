@@ -193,6 +193,7 @@ class FieldUpdate extends DrushCommands {
       ->getStorage($entity_definition->getBundleEntityType())
       ->loadMultiple();
 
+    /** @var \Drupal\wwm_utility\FieldUtility $wwm_field_utility */
     $wwm_field_utility = \Drupal::service('wwm_utility.field');
 
     $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
