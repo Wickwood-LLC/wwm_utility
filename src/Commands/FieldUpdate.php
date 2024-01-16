@@ -6,6 +6,8 @@ use Drush\Commands\DrushCommands;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
+use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 /**
  * A Drush commandfile.
@@ -469,5 +471,33 @@ class FieldUpdate extends DrushCommands {
     else {
       $this->logger()->notice(dt('Could not find either or both of fields.'));
     }
+  }
+
+  /**
+   * List fields of type in an entity type.
+   *
+   * @command wwm:list-fields
+   * @param string $entity_type
+   *  Entity type
+   * @param string $field_types
+   *  Field types
+   */
+  public function listFields($entity_type, $field_types) {
+    /** @var \Drupal\wwm_utility\FieldUtility $wwm_field_utility */
+    $wwm_field_utility = \Drupal::service('wwm_utility.field');
+
+    $field_types = explode(',', $field_types);
+
+    $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
+    $rows = [];
+    foreach ($fields[$entity_type] as $bundle => $bundle_fields) {
+      $rows[] = [$bundle, implode("\n", $bundle_fields)];
+    }
+    $output = new ConsoleOutput();
+    $table = new Table($output);
+    $table
+      ->setHeaders(['Bundle', 'Fields'])
+      ->setRows($rows);
+    $table->render();
   }
 }
