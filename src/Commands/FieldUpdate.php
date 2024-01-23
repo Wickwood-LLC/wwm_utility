@@ -30,7 +30,7 @@ class FieldUpdate extends DrushCommands {
   /**
    * Convert D7 format media embeds to D9.
    *
-   * @command set-single-text-format-on-field
+   * @command wwm:set-single-text-format-on-field
    *
    * @param string $entity_type
    *  Type of entity to work on. Usually node.
@@ -168,7 +168,7 @@ class FieldUpdate extends DrushCommands {
   /**
    * Get usage of a text format on content.
    *
-   * @command get-text-format-usage
+   * @command wwm:get-text-format-usage
    *
    * @param string $format
    *  Format to be queried for.
@@ -252,7 +252,7 @@ class FieldUpdate extends DrushCommands {
   /**
    * Replace usage of a text format with another one.
    *
-   * @command replace-text-format-usage
+   * @command wwm:replace-text-format-usage
    *
    * @param string $format_old
    *  Format to be replaced.

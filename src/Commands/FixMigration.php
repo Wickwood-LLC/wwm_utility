@@ -64,7 +64,7 @@ class FixMigration extends DrushCommands {
   /**
    * Convert D7 format media embeds to D9.
    * 
-   * @command convert-d7-media-embeds-to-d9
+   * @command wwm:convert-d7-media-embeds-to-d9
    * 
    * @param string $entity_type
    *  Type of entity to work on. Usually node.
