@@ -250,7 +250,7 @@ class FieldUpdate extends DrushCommands {
   }
 
   /**
-   * Reaplace usage of a text format with another one.
+   * Replace usage of a text format with another one.
    *
    * @command replace-text-format-usage
    *
