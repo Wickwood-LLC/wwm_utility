@@ -7,6 +7,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
 /**
@@ -116,7 +117,7 @@ class FieldUpdate extends DrushCommands {
   }
 
   /**
-   * This is utility method mainly built to help slef::getTextFormatUsage()
+   * This is utility method mainly built to help self::getTextFormatUsage()
    */
   public static function getTextFormatUsageInEntityContents($format, $field_types, $entity_type, $bundles = []) {
     $entity_type_manager = \Drupal::entityTypeManager();
@@ -212,7 +213,7 @@ class FieldUpdate extends DrushCommands {
       }
     }
 
-    $usage_in_field_settings = [];
+    $usage_in_field_settings_rows = [];
     if (\Drupal::moduleHandler()->moduleExists('allowed_formats')) {
       foreach ($bundles as $type) {
         if (!empty($fields[$entity_type][$type])) {
@@ -220,33 +221,58 @@ class FieldUpdate extends DrushCommands {
             $field_instance = FieldConfig::loadByName($entity_type, $type, $field);
             $allowed_formats = $field_instance->getThirdPartySetting('allowed_formats', 'allowed_formats');
             if ($allowed_formats && in_array($format, $allowed_formats)) {
-              $usage_in_field_settings[$entity_type][$type][] = $field;
+              $usage_in_field_settings_rows[] = [$type, $field];
             }
           }
         }
       }
     }
 
-    $module_handler = \Drupal::service('module_handler');
-    $module_path = $module_handler->getModule('wwm_utility')->getPath();
 
-    $loader = new \Twig\Loader\FilesystemLoader([$module_path . '/templates']);
-    $twig = new \Twig\Environment($loader);
+    $output = new ConsoleOutput();
+    $use_in_field_settings_table = new Table($output);
+    $use_in_field_settings_table->setHeaderTitle(t('Use in Field Settings'));
+    $use_in_field_settings_table
+      ->setHeaders(['Bundle', 'Field'])
+      ->setRows($usage_in_field_settings_rows);
+    if (empty($usage_in_field_settings_rows)) {
+      $use_in_field_settings_table->addRow([ new TableCell(t('No usage found'), ['colspan' => 2])]);
+    }
+    $use_in_field_settings_table->setColumnWidth(0, 11);
+    $use_in_field_settings_table->setColumnWidth(1, 11);
+    $use_in_field_settings_table->render();
 
-    $file_handle = fopen('text-format-usage-report.html', 'w');
-    fwrite(
-      $file_handle,
-      $twig->render(
-        'text-format-usage-report.html.twig',
-        [
-          'entity_type' => $entity_type,
-          'format' => $format,
-          'usage_in_configuration' => $usage_in_field_settings,
-          'usage_in_content' => $usage,
-        ]
-      )
-    );
-    fclose($file_handle);
+
+    $use_in_entities_table = new Table($output);
+    $use_in_entities_table->setHeaderTitle(t('Use in Entities'));
+    $use_in_entities_table
+      ->setHeaders(['Entity ID', 'Bundle', 'Revision', 'Fields']);
+    foreach ($usage as $entity_id => $use) {
+      $revision_index = 0;
+      foreach ($use['revisions'] as $revision_id => $fields) {
+        if ($revision_index == 0) {
+          $use_in_entities_table->addRow([
+            new TableCell($entity_id, ['rowspan' => count($use['revisions'])]),
+            new TableCell($use['bundle'], ['rowspan' => count($use['revisions'])]),
+            $revision_id,
+            implode("\n", $fields)
+          ]);
+        }
+        else {
+          $use_in_entities_table->addRow([$revision_id, implode("\n", $fields)]);
+        }
+        $revision_index++;
+      }
+    }
+
+    if (empty($usage)) {
+      $use_in_entities_table->addRow([ new TableCell(t('No usage found'), ['colspan' => 4])]);
+    }
+    $use_in_entities_table->setColumnWidth(0, 4);
+    $use_in_entities_table->setColumnWidth(1, 4);
+    $use_in_entities_table->setColumnWidth(2, 4);
+    $use_in_entities_table->setColumnWidth(3, 4);
+    $use_in_entities_table->render();
   }
 
   /**
