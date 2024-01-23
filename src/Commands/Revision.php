@@ -74,6 +74,7 @@ class Revision extends DrushCommands {
     $entity_type = 'node';
     $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type);
 
+    /** @var \Drupal\entity\ContentEntityInterface $revision */
     $revision = $entity_storage->loadRevision($revision_id);
 
     // $revision->isDefaultRevision(TRUE);
