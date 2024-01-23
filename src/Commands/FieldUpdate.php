@@ -29,7 +29,7 @@ class FieldUpdate extends DrushCommands {
   }
 
   /**
-   * Convert D7 format media embeds to D9.
+   * Set to use only a text format on a entity bundle.
    *
    * @command wwm:set-single-text-format-on-field
    *
