@@ -343,6 +343,7 @@ class FieldUpdate extends DrushCommands {
       do {
         $this->logger()->notice(dt('Loading and saving item with id "@id"...', ['@id' => $next_id]));
 
+        /** @var \Drupal\entity\ContentEntityInterface $entity */
         $entity = $entity_storage->load($next_id);
         if ($entity_definition->hasKey('revision')) {
           $entity->setNewRevision(FALSE);
@@ -397,6 +398,7 @@ class FieldUpdate extends DrushCommands {
         //   ->execute();
         $results = $query->execute();
         foreach ($results as $entity_id) {
+          /** @var \Drupal\entity\ContentEntityInterface $entity */
           $entity = $entity_storage->load($entity_id);
           if ($entity) {
             $field_items = $entity->get($field_name);
@@ -483,6 +485,7 @@ class FieldUpdate extends DrushCommands {
           $this->logger()->notice(dt('Not items to copy'));
         }
         foreach ($results as $entity_id) {
+          /** @var \Drupal\entity\ContentEntityInterface $entity */
           $entity = $entity_storage->load($entity_id);
           if ($entity) {
             /** @var \Drupal\Core\Field\FieldItemList $field_items */
