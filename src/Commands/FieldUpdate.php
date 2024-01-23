@@ -255,11 +255,11 @@ class FieldUpdate extends DrushCommands {
             new TableCell($entity_id, ['rowspan' => count($use['revisions'])]),
             new TableCell($use['bundle'], ['rowspan' => count($use['revisions'])]),
             $revision_id,
-            implode("\n", $fields)
+            implode(", ", $fields)
           ]);
         }
         else {
-          $use_in_entities_table->addRow([$revision_id, implode("\n", $fields)]);
+          $use_in_entities_table->addRow([$revision_id, implode(", ", $fields)]);
         }
         $revision_index++;
       }
