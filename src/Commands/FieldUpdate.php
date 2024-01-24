@@ -38,7 +38,7 @@ class FieldUpdate extends DrushCommands {
    * @param string $bundle
    *  Type of bundle to work on. It can be more than one with comma separated.
    * @param string $field
-   *  Formetted text fields to act on. It can be more than one with comma separated.
+   *  Formatted text fields to act on. It can be more than one with comma separated.
    *  Please note: It won't test if the field has no value.
    * @param string $format
    *  Format to set on the field.
