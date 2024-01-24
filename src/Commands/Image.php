@@ -44,6 +44,7 @@ class Image extends DrushCommands {
 
     $count = 0;
     foreach ($result as $revision_id => $entity_id) {
+      /** @var \Drupal\entity\ContentEntityInterface $revision */
       $revision = $entity_storage->loadRevision($revision_id);
       $value = $revision->{$source_field}->value;
       $revision->{$image_field}->{$image_field_property} = $value;
