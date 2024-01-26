@@ -336,6 +336,7 @@ class FieldUpdate extends DrushCommands {
     $query->condition($entity_definition->getKey('id'), 0, '>');
     $results = $query->sort($entity_definition->getKey('id') , 'ASC')
       ->range(0, 1)
+      ->accessCheck(FALSE)
       ->execute();
     if (!empty($results)) {
       $next_id = reset($results);
@@ -360,6 +361,7 @@ class FieldUpdate extends DrushCommands {
         $query->condition($entity_definition->getKey('id'), $next_id, '>');
         $results = $query->sort($entity_definition->getKey('id') , 'ASC')
           ->range(0, 1)
+          ->accessCheck(FALSE)
           ->execute();
 
         if (!empty($results)) {
