@@ -35,3 +35,7 @@ services:
     class: \Drupal\wwm_utility\Commands\Migration
     tags:
       - { name: drush.command }
+  wwm_utility.filter_format:
+    class: \Drupal\wwm_utility\Commands\FilterFormat
+    tags:
+      - { name: drush.command }
