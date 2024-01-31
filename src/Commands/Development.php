@@ -56,6 +56,7 @@ class Development extends DrushCommands {
       $next_id = reset($results);
 
       do {
+        /** @var \Drupal\entity\ContentEntityInterface $entity */
         $entity = $entity_storage->load($next_id);
         $this->logger()->notice(dt('Setting dummy email address for "@user" with id "@id"...', ["@user" => $entity->label(), '@id' => $next_id]));
         $entity->setEmail($entity->getAccountName() . '.' . $entity->id() . '@noemail.invalid');
