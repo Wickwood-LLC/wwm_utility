@@ -2,6 +2,8 @@
 
 namespace Drupal\wwm_utility\Plugin\Commerce\CheckoutPane;
 
+use Drupal\user\Entity\User;
+use Drupal\field_group\FormatterHelper;
 use Drupal\commerce\CredentialsCheckFloodInterface;
 use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -239,7 +241,7 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
     if (!$this->currentUser->isAnonymous()) {
       if ($this->configuration['show_condition'] == 'new_users') {
         /** @var \Drupal\user\UserInterface $account */
-        $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+        $account = User::load(\Drupal::currentUser()->id());
         if ($account->getCreatedTime() >= strtotime($this->configuration['new_user_age'])) {
           return TRUE;
         }
@@ -267,7 +269,7 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
     ];
 
     /** @var \Drupal\user\UserInterface $account */
-    $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $account = User::load(\Drupal::currentUser()->id());
     $form_display = EntityFormDisplay::collectRenderDisplay($account, $this->configuration['user_form_mode']);
     $form_display->buildForm($account, $pane_form['user_profile'], $form_state);
 
@@ -288,8 +290,8 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
       ];
 
       field_group_attach_groups($pane_form['user_profile'], $context);
-      $pane_form['user_profile']['#process'][] = [\Drupal\field_group\FormatterHelper::class, 'formProcess'];
-      $pane_form['user_profile']['#pre_render'][] = [\Drupal\field_group\FormatterHelper::class, 'formGroupPreRender'];
+      $pane_form['user_profile']['#process'][] = [FormatterHelper::class, 'formProcess'];
+      $pane_form['user_profile']['#pre_render'][] = [FormatterHelper::class, 'formGroupPreRender'];
     }
 
     return $pane_form;
@@ -324,7 +326,7 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
         // }
 
         /** @var \Drupal\user\UserInterface $account */
-        $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+        $account = User::load(\Drupal::currentUser()->id());
 
         $form_display = EntityFormDisplay::collectRenderDisplay($account, $this->configuration['user_form_mode']);
         $form_display->extractFormValues($account, $pane_form['user_profile'], $form_state);
@@ -366,8 +368,8 @@ class UserProfile extends CheckoutPaneBase implements CheckoutPaneInterface, Con
         $storage = $this->entityTypeManager->getStorage('user');
         /** @var \Drupal\user\UserInterface $account */
         // $account = $storage->load($form_state->get('logged_in_uid'));
-        $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-        
+        $account = User::load(\Drupal::currentUser()->id());
+
         // user_login_finalize($account);
         $this->order->setCustomer($account);
         // $this->credentialsCheckFlood->clearAccount($this->clientIp, $account->getAccountName());

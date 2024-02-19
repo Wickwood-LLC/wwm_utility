@@ -2,6 +2,7 @@
 
 namespace Drupal\wwm_utility\Commands;
 
+use Drupal\Core\Database\Database;
 use Drush\Commands\DrushCommands;
 // use Drupal\wwm_utility\MediaUtility;
 
@@ -24,13 +25,13 @@ class Commerce extends DrushCommands {
    */
   public function __construct() {
     // Ensure connection to default database.
-    \Drupal\Core\Database\Database::setActiveConnection();
+    Database::setActiveConnection();
     $this->d9_database = \Drupal::database();
   }
 
   public function __destruct() {
     // Reset connection to default database.
-    \Drupal\Core\Database\Database::setActiveConnection();
+    Database::setActiveConnection();
   }
 
   /**

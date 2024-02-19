@@ -2,6 +2,7 @@
 
 namespace Drupal\wwm_utility\Commands;
 
+use Drupal\Core\Database\Database;
 use Drush\Commands\DrushCommands;
 use Drupal\Component\Datetime\DateTimePlus;
 use Symfony\Component\Console\Helper\Table;
@@ -26,13 +27,13 @@ class Migration extends DrushCommands {
    */
   public function __construct() {
     // Ensure connection to default database.
-    \Drupal\Core\Database\Database::setActiveConnection();
+    Database::setActiveConnection();
     $this->d9_database = \Drupal::database();
   }
 
   public function __destruct() {
     // Reset connection to default database.
-    \Drupal\Core\Database\Database::setActiveConnection();
+    Database::setActiveConnection();
   }
 
   /**

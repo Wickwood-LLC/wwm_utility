@@ -2,6 +2,8 @@
 
 namespace Drupal\wwm_utility\Commands;
 
+use Twig\Loader\FilesystemLoader;
+use Twig\Environment;
 use Drush\Commands\DrushCommands;
 use Drupal\wwm_utility\MediaUtility;
 
@@ -108,8 +110,8 @@ class FixMigration extends DrushCommands {
       $module_handler = \Drupal::service('module_handler');
       $module_path = $module_handler->getModule('wwm_utility')->getPath();
 
-      $loader = new \Twig\Loader\FilesystemLoader([$module_path . '/templates']);
-      $twig = new \Twig\Environment($loader);
+      $loader = new FilesystemLoader([$module_path . '/templates']);
+      $twig = new Environment($loader);
 
       $report_file = fopen($report, 'w');
       fwrite(

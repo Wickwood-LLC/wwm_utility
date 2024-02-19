@@ -2,6 +2,7 @@
 
 namespace Drupal\wwm_utility\Commands;
 
+use Drupal\Core\Database\Database;
 use Drush\Commands\DrushCommands;
 use Drupal\Core\Database\ConnectionNotDefinedException;
 
@@ -25,18 +26,18 @@ class Revision extends DrushCommands {
   /**
    */
   public function __construct() {
-    if (\Drupal\Core\Database\Database::getConnectionInfo('migrate')) {
-      $this->d7_database = \Drupal\Core\Database\Database::getConnection('default', 'migrate');
+    if (Database::getConnectionInfo('migrate')) {
+      $this->d7_database = Database::getConnection('default', 'migrate');
     }
 
     // Ensure connection to default database.
-    \Drupal\Core\Database\Database::setActiveConnection();
+    Database::setActiveConnection();
     $this->d9_database = \Drupal::database();
   }
 
   public function __destruct() {
     // Reset connection to default database.
-    \Drupal\Core\Database\Database::setActiveConnection();
+    Database::setActiveConnection();
   }
 
   public function getExtraRevisionsOfNode($nid) {
