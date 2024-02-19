@@ -1,7 +1,7 @@
 name: 'WWM Utility'
 type: module
 description: 'Utility functionalities common for all WWM sites.'
-core_version_requirement: ^9
+core_version_requirement: ^9 || ^10
 package: 'WWM'
 configure: wwm_utility.settings
 
