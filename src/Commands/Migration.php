@@ -21,7 +21,15 @@ use Symfony\Component\Console\Output\ConsoleOutput;
  */
 class Migration extends DrushCommands {
 
+  /**
+   * @var \Drupal\Core\Database\Connection
+   */
   protected $d9_database;
+
+  /**
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $d7_database;
 
   /**
    */
@@ -34,6 +42,15 @@ class Migration extends DrushCommands {
   public function __destruct() {
     // Reset connection to default database.
     Database::setActiveConnection();
+  }
+
+  public function getD7Database() {
+    if (!$this->d7_database) {
+      if (Database::getConnectionInfo('migrate')) {
+        $this->d7_database = Database::getConnection('default', 'migrate');
+      }
+    }
+    return $this->d7_database;
   }
 
   /**
