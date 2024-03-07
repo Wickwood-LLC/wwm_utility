@@ -119,4 +119,54 @@ class Migration extends DrushCommands {
     print("Total $count migrations.") . PHP_EOL;
   }
 
+  /**
+   * List migrations that are executed
+   *
+   * @command wwm:list-entities-not-migrated
+   *
+   * @param string $entity_type
+   *  Type of entity to work on. Usually node.
+   */
+  public function missingEntities($entity_type, $bundle) {
+
+    $d7_entity_table_map = [
+      'field_collection' => 'field_collection_item',
+    ];
+
+    $d7_entity_id_map = [
+      'field_collection' => 'item_id',
+    ];
+
+    $d7_entity_bundle_column_map = [
+      'field_collection' => 'field_name',
+    ];
+
+    $d9_entity_type_map = [
+      'field_collection' => 'paragraph',
+    ];
+
+    $d7_database = $this->getD7Database();
+
+    $d7_query = $d7_database->select($d7_entity_table_map[$entity_type], 'entity');
+    $d7_query->fields('entity', [$d7_entity_id_map[$entity_type]]);
+    $d7_query->condition('entity.' . $d7_entity_bundle_column_map[$entity_type], '%' . $bundle . '%', 'LIKE');
+    $d7_ids = $d7_query->execute()->fetchCol();
+
+    // print_r($d7_ids);
+
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_storage = $entity_type_manager->getStorage($d9_entity_type_map[$entity_type] ?? $entity_type);
+
+    // $entity_definition = $this->entityTypeManager->getDefinition($entity_type);
+    $entity_definition = $entity_storage->getEntityType();
+    $d9_result = $entity_storage->getQuery()
+      ->condition($entity_definition->getKey('bundle'), $bundle)
+      ->accessCheck(FALSE)
+      ->execute();
+
+    $d9_ids = array_values($d9_result);
+
+    print_r(array_diff($d7_ids, $d9_ids));
+  }
+
 }
