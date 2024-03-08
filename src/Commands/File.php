@@ -37,12 +37,11 @@ class File extends DrushCommands {
   /**
    * Find file entities having file names not matching its mime type.
    *
-   * @param boolean $autocorrect
-   *  Optional. The file name will be autocorrected.
-   *
    * @command wwm:file-find-invalid-filenames
+   *
+   * @option autocorrect Automatically correct file names.
    */
-  public function findInvalidFileNames($autocorrect = FALSE) {
+  public function findInvalidFileNames(array $options = ['autocorrect' => FALSE]) {
     $entity_type = 'file';
   
     $entity_type_manager = \Drupal::entityTypeManager();
@@ -72,7 +71,7 @@ class File extends DrushCommands {
             $new_name = $entity->filename->value . '.' . $extension;
           }
           $this->logger()->notice(dt( $index++ . '. Invalid file name "@filename" with id "@id". Proposed new name: @newname', ["@filename" => $entity->filename->value, '@id' => $next_id, '@newname' => $new_name]));
-          if ($extension && $autocorrect) {
+          if ($extension && $options['autocorrect']) {
             $entity->filename = $new_name;
             $entity->save();
             $this->logger()->notice(dt("\tApplied new name."));
