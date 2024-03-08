@@ -4,7 +4,7 @@ namespace Drupal\wwm_utility\Commands;
 
 use Drupal\Core\Database\Database;
 use Drush\Commands\DrushCommands;
-// use Drupal\wwm_utility\MediaUtility;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * A Drush commandfile.
@@ -40,10 +40,12 @@ class File extends DrushCommands {
    * @command wwm:file-find-invalid-filenames
    *
    * @option autocorrect Automatically correct file names.
+   * @option ask Ask to rename for each of the findings. autocorrect will be disabled if this is set.
    */
-  public function findInvalidFileNames(array $options = ['autocorrect' => FALSE]) {
+  public function findInvalidFileNames(array $options = ['autocorrect' => FALSE, 'ask' => FALSE]) {
+    $io = new SymfonyStyle($this->input, $this->output);
+
     $entity_type = 'file';
-  
     $entity_type_manager = \Drupal::entityTypeManager();
     $entity_definition = $entity_type_manager->getDefinition($entity_type);
     $entity_storage = $entity_type_manager->getStorage($entity_type);
@@ -71,10 +73,19 @@ class File extends DrushCommands {
             $new_name = $entity->filename->value . '.' . $extension;
           }
           $this->logger()->notice(dt( $index++ . '. Invalid file name "@filename" with id "@id". Proposed new name: @newname', ["@filename" => $entity->filename->value, '@id' => $next_id, '@newname' => $new_name]));
-          if ($extension && $options['autocorrect']) {
-            $entity->filename = $new_name;
-            $entity->save();
-            $this->logger()->notice(dt("\tApplied new name."));
+          if ($extension) {
+            $rename = FALSE;
+            if ($options['ask'] && $io->ask('Do you want to apply this name change?', FALSE)) {
+              $rename = TRUE;
+            }
+            else if ($options['autocorrect']) {
+              $rename = TRUE;
+            }
+            if ($rename) {
+              $entity->filename = $new_name;
+              $entity->save();
+              $this->logger()->notice(dt("\tApplied new name."));
+            }
           }
         }
 
