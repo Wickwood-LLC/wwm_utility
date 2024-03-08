@@ -65,26 +65,29 @@ class File extends DrushCommands {
       do {
         /** @var \Drupal\file\Entity\File $entity */
         $entity = $entity_storage->load($next_id);
+        /** @var \Drupal\filefield_sources\File\MimeType\ExtensionMimeTypeGuesser $guesser */
         $guesser = \Drupal::service('file.mime_type.guesser.extension');
         $mime_type_from_filename = $guesser->guess($entity->filename->value);
-        if ($mime_type_from_filename == 'application/octet-stream') {
+        $file_extension = pathinfo($entity->filename->value, PATHINFO_EXTENSION);
+        if ($mime_type_from_filename == 'application/octet-stream' && !in_array($file_extension, ['eot', 'ttf', 'woff'])) {
           $extension = $guesser->convertMimeTypeToExtension($entity->getMimeType());
-          if ($extension) {
-            $new_name = $entity->filename->value . '.' . $extension;
-          }
-          $this->logger()->notice(dt( $index++ . '. Invalid file name "@filename" with id "@id". Proposed new name: @newname', ["@filename" => $entity->filename->value, '@id' => $next_id, '@newname' => $new_name]));
-          if ($extension) {
-            $rename = FALSE;
-            if ($options['ask'] && $io->ask('Do you want to apply this name change?', FALSE)) {
-              $rename = TRUE;
+          if ($file_extension != $extension) {
+            if ($extension) {
+              $new_name = $entity->filename->value . '.' . $extension;
             }
-            else if ($options['autocorrect']) {
+            $this->logger()->notice(dt( $index++ . '. Invalid file name "@filename" with id "@id". Proposed new name: @newname', ["@filename" => $entity->filename->value, '@id' => $next_id, '@newname' => $new_name]));
+            $rename = FALSE;
+            if ($options['ask'] && $extension = $io->ask('Please enter the extension to be used? (Leave empty to skip)', FALSE)) {
+              $rename = TRUE;
+              $new_name = $entity->filename->value . '.' . $extension;
+            }
+            else if ($extension && $options['autocorrect']) {
               $rename = TRUE;
             }
             if ($rename) {
               $entity->filename = $new_name;
               $entity->save();
-              $this->logger()->notice(dt("\tApplied new name."));
+              $this->logger()->notice(dt("\tApplied new name '@new_name'.", ['@new_name' => $new_name]));
             }
           }
         }
