@@ -457,7 +457,7 @@ class FieldUpdate extends DrushCommands {
       ]));
     }
     if (!$destination_field_config) {
-      $this->logger()->error(dt('Source field @field does not exist!', [
+      $this->logger()->error(dt('Destination field @field does not exist!', [
         '@field' => $destination_field,
       ]));
     }
