@@ -69,6 +69,15 @@ class MediaUtility {
       'original_size_no_watermark_' => [
         // Use original size.
       ],
+      'original' => [
+        // Use original size.
+      ],
+      'original_no_loading_on_mobile' => [
+        // Use original size.
+      ],
+      'scale_640x360' => [
+        'image_style' => 'image_large_16x9',
+      ],
       'teaser' => [
         'image_style' => 'image_medium_4x3',
       ],
