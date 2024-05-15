@@ -1,0 +1,5 @@
+wwm_utility.find_alias:
+  route_name: wwm_utility.find_alias
+  base_route: entity.path_alias.collection
+  title: 'Find'
+  weight: 9

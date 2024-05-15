@@ -18,3 +18,11 @@ wwm_utility.file_rename_form:
       file:
         type: entity:file
 
+wwm_utility.find_alias:
+  path: '/admin/config/search/path/find'
+  defaults:
+    _controller: '\Drupal\wwm_utility\Controller\AliasController::find'
+    _title: 'Find'
+  requirements:
+    _permission: 'administer url aliases'
+
