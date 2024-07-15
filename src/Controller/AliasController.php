@@ -23,11 +23,13 @@ class AliasController extends ControllerBase {
     // Retrieve the parameter from the URL if it exists.
     if ($system_path = $request->query->get('system_path')) {
       $alias_storage = \Drupal::entityTypeManager()->getStorage('path_alias');
+      $alias_list_builder = \Drupal::entityTypeManager()->getListBuilder('path_alias');
       $aliases = $alias_storage->loadByProperties(['path' => $system_path]);
       $table = [
         '#theme' => 'table',
         '#header' => [
           ['data' => 'Alias', '#attributes' => ['class' => 'text-align-right']], /* Cell aligned right */
+          ['data' => $this->t('Operations')],
         ],
         '#rows' => [],
       ];
@@ -35,11 +37,19 @@ class AliasController extends ControllerBase {
         /** @var \Drupal\path_alias\Entity\PathAlias $alias */
         $url = Url::fromUserInput($alias->getPath());
         $table['#rows'][] = [
-          ['data' => [
-            '#type' => 'link',
-            '#title' => $alias->getAlias(),
-            '#url' => $url->setOption('attributes', ['title' => $alias->getAlias()]),
-          ]]
+          [
+            'data' => [
+              '#type' => 'link',
+              '#title' => $alias->getAlias(),
+              '#url' => $url->setOption('attributes', ['title' => $alias->getAlias()]),
+            ],
+          ],
+          [
+            'data' => [
+              '#type' => 'operations',
+              '#links' => $alias_list_builder->getOperations($alias),
+            ]
+          ]
         ];
       }
       $build['table'] = $table; 
