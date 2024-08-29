@@ -497,6 +497,13 @@ class FieldUpdate extends DrushCommands {
             /** @var \Drupal\Core\Field\FieldItemList $field_items */
             $field_items = $entity->get($source_field);
             $entity->set($destination_field, $field_items->getValue());
+
+            if ($entity_definition->hasKey('revision')) {
+              $entity->setNewRevision(FALSE);
+              // Set syncing so no new revision will be created by content moderation process.
+              // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
+              $entity->setSyncing(TRUE);
+            }
             $entity->save();
             $this->logger()->notice(dt('Copied for "@label" (@id).', ['@label' => $entity->label(), '@id' => $entity->id()]));
           }
