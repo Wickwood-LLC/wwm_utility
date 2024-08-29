@@ -339,6 +339,10 @@ class MediaUtility {
         $display_settings['linkit'] = $embed_options['link'];
       }
     }
+    else if ($media->bundle() == 'remote_video') {
+      // All remote videos are displayed with player.
+      $display = 'view_mode:media.player';
+    }
     else if ($d7_view_mode == 'media_link') {
       $display = 'entity_reference:generic_media_link';
       // In D7, there appears to be no way to give separate title for link.
