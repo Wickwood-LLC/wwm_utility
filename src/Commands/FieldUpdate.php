@@ -447,6 +447,9 @@ class FieldUpdate extends DrushCommands {
       'string' => [
         'text_long',
       ],
+      'string_long' => [
+        'text_long',
+      ]
     ];
 
     $source_field_config = FieldConfig::loadByName($entity_type, $bundle, $source_field);
