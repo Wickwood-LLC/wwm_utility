@@ -352,6 +352,7 @@ class FieldUpdate extends DrushCommands {
           // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
           $entity->setSyncing(TRUE);
         }
+        $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
         $entity->save();
 
         $query = \Drupal::entityQuery($entity_type);
