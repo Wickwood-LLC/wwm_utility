@@ -5,7 +5,8 @@ use Drupal\wwm_utility\Plugin\Block\ContentListingPageTitleBlock;
 /**
  * Implements hook_preprocess_page_title().
  */
-function wwm_utility_preprocess_page_title(&$variables) {
+function wwm_utility_preprocess_page_title(&$variables)
+{
   $title = ContentListingPageTitleBlock::getTitle();
   if (!empty($title)) {
     $variables['title'] = $title;
@@ -29,8 +30,8 @@ function lawrenceswittner_boot()
 
   if (in_array(strtoupper($country_code), array('CN', 'HK', 'MO', 'RU', 'KP', 'AR', 'JP'))) {
     header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
-    print ('<html><head><title>Access Denied!</title></head>');
-    print ('<body><h1>Sorry, ' . check_plain(ip_address()) . ' has been banned.</h1></body></html>');
+    print('<html><head><title>Site Not Available</title></head>');
+    print('<body><h1>Site Not Available.</h1></body></html>');
     exit();
   }
 }
