@@ -11,3 +11,26 @@ function wwm_utility_preprocess_page_title(&$variables) {
     $variables['title'] = $title;
   }
 }
+
+function lawrenceswittner_boot()
+{
+
+  $ip_address = ip_address();
+
+  $ipl = ip2long($ip_address);
+  if (is_int($ip_address)) {
+    $ipl = $ip_address;
+  }
+
+  // Locate IP within range.
+  $sql = "SELECT country FROM {ip2country}
+             WHERE (:start >= ip_range_first AND :end <= ip_range_last) LIMIT 1";
+  $country_code = db_query($sql, array(':start' => $ipl, ':end' => $ipl))->fetchField();
+
+  if (in_array(strtoupper($country_code), array('CN', 'HK', 'MO', 'RU', 'KP'))) {
+    header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
+    print ('<html><head><title>Access Denied!</title></head>');
+    print ('<body><h1>Sorry, ' . check_plain(ip_address()) . ' has been banned.</h1></body></html>');
+    exit();
+  }
+}
