@@ -27,7 +27,7 @@ function lawrenceswittner_boot()
              WHERE (:start >= ip_range_first AND :end <= ip_range_last) LIMIT 1";
   $country_code = db_query($sql, array(':start' => $ipl, ':end' => $ipl))->fetchField();
 
-  if (in_array(strtoupper($country_code), array('CN', 'HK', 'MO', 'RU', 'KP'))) {
+  if (in_array(strtoupper($country_code), array('CN', 'HK', 'MO', 'RU', 'KP', 'AR', 'JP'))) {
     header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
     print ('<html><head><title>Access Denied!</title></head>');
     print ('<body><h1>Sorry, ' . check_plain(ip_address()) . ' has been banned.</h1></body></html>');
