@@ -108,6 +108,11 @@ class FieldUpdate extends DrushCommands {
       $entity_storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityType()->id());
       $entity->original = $entity_storage->loadRevision($revision_id);
 
+      $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
+
+      if ($pathauto_exists) {
+        $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
+      }
       $entity->setNewRevision(FALSE);
       // Set syncing so no new revision will be created by content moderation process.
       // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
@@ -340,6 +345,7 @@ class FieldUpdate extends DrushCommands {
       ->execute();
     if (!empty($results)) {
       $next_id = reset($results);
+      $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
 
       do {
         $this->logger()->notice(dt('Loading and saving item with id "@id"...', ['@id' => $next_id]));
@@ -352,7 +358,9 @@ class FieldUpdate extends DrushCommands {
           // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
           $entity->setSyncing(TRUE);
         }
-        $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
+        if ($pathauto_exists) {
+          $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
+        }
         $entity->save();
 
         $query = \Drupal::entityQuery($entity_type);
@@ -480,6 +488,8 @@ class FieldUpdate extends DrushCommands {
         ]));
       }
       else {
+        $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
+
         $query = \Drupal::entityQuery($entity_type);
         if ($entity_type != 'user') {
           // TODO: Improve this code to dynamiclly find whether entity type has bundles or not.
@@ -503,6 +513,9 @@ class FieldUpdate extends DrushCommands {
               // Set syncing so no new revision will be created by content moderation process.
               // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
               $entity->setSyncing(TRUE);
+            }
+            if ($pathauto_exists) {
+              $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
             }
             $entity->save();
             $this->logger()->notice(dt('Copied for "@label" (@id).', ['@label' => $entity->label(), '@id' => $entity->id()]));

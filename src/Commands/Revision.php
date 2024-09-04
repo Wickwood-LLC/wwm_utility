@@ -83,6 +83,11 @@ class Revision extends DrushCommands {
     // Set syncing so no new revision will be created by content moderation process.
     // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
     $revision->setSyncing(TRUE);
+    $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
+
+    if ($pathauto_exists) {
+      $revision->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
+    }
     $revision->save();
   }
 

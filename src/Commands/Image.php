@@ -32,6 +32,8 @@ class Image extends DrushCommands {
     $entity_definition = $entity_type_manager->getDefinition($entity_type);
     $entity_storage = $entity_type_manager->getStorage($entity_type);
 
+    $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
+
     $result = $entity_storage->getQuery()
       ->allRevisions()
       ->condition($entity_definition->getKey('bundle'), $bundle)
@@ -52,6 +54,9 @@ class Image extends DrushCommands {
       // Set syncing so no new revision will be created by content moderation process.
       // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
       $revision->setSyncing(TRUE);
+      if ($pathauto_exists) {
+        $revision->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
+      }
       $revision->save();
       $count++;
       $io->text("{$count}. Updated {$revision->label()}({$revision->id()})");

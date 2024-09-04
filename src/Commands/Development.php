@@ -47,6 +47,8 @@ class Development extends DrushCommands {
     $entity_storage = $entity_type_manager->getStorage($entity_type);
 
     $query = \Drupal::entityQuery($entity_type);
+
+    $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
     
     // We don't want to process any item with id '0'. Specifically user 0 is anonymous user
     $query->condition($entity_definition->getKey('id'), 0, '>');
@@ -66,6 +68,9 @@ class Development extends DrushCommands {
           // Set syncing so no new revision will be created by content moderation process.
           // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
           $entity->setSyncing(TRUE);
+        }
+        if ($pathauto_exists) {
+          $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
         }
         $entity->save();
 

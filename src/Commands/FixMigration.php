@@ -59,6 +59,10 @@ class FixMigration extends DrushCommands {
       // Set syncing so no new revision will be created by content moderation process.
       // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
       $entity->setSyncing(TRUE);
+      $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
+      if ($pathauto_exists) {
+        $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
+      }
       $entity->save();
     }
   }
