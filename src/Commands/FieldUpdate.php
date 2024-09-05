@@ -9,6 +9,7 @@ use Drupal\file\Entity\File;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
  * A Drush commandfile.
@@ -93,7 +94,7 @@ class FieldUpdate extends DrushCommands {
     }
   }
 
-  protected function setTextFormatOnField($entity, $fields, $format, $revision_id) {
+  protected function setTextFormatOnField(ContentEntityInterface $entity, $fields, $format, $revision_id) {
     $entity_changed = FALSE;
     foreach ($fields as $field) {
       if ($entity->{$field}->value && $entity->{$field}->format != $format) {
@@ -110,7 +111,7 @@ class FieldUpdate extends DrushCommands {
 
       $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
 
-      if ($pathauto_exists) {
+      if ($pathauto_exists && !in_array($entity->getEntityTypeId(), ['paragraph'])) {
         $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
       }
       $entity->setNewRevision(FALSE);
