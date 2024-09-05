@@ -514,7 +514,7 @@ class FieldUpdate extends DrushCommands {
               // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
               $entity->setSyncing(TRUE);
             }
-            if ($pathauto_exists) {
+            if ($pathauto_exists && !in_array($entity_type, ['paragraph'])) {
               $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
             }
             $entity->save();
