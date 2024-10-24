@@ -400,7 +400,8 @@ class FieldUpdate extends DrushCommands {
     if ($field_config) {
       // Reduce file usage count.
       if ($field_config->getType() == 'file' || $field_config->getType() == 'image') {
-        $query = \Drupal::entityQuery($entity_type);
+        $query = \Drupal::entityQuery($entity_type)
+          ->accessCheck(FALSE);
         if ($entity_type != 'user') {
           // TODO: Improve this code to dynamiclly find whether entity type has bundles or not.
           $query->condition($entity_definition->getKey('bundle'), $bundle);
