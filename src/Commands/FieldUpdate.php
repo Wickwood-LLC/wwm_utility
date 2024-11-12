@@ -134,7 +134,8 @@ class FieldUpdate extends DrushCommands {
 
     $fields = $wwm_field_utility->findFilesOfType($field_types, $entity_type);
 
-    $query = \Drupal::entityQuery($entity_type);
+    $query = \Drupal::entityQuery($entity_type)
+      ->accessCheck(FALSE);
     if (!empty($bundles)) {
       $query->condition($entity_definition->getKey('bundle'), $bundles, 'IN');
     }
@@ -150,6 +151,7 @@ class FieldUpdate extends DrushCommands {
         $entity_type_entity = $entity->getEntityType();
 
         $revisions = $entity_storage->getQuery()
+          ->accessCheck(FALSE)
           ->allRevisions()
           ->condition($entity_type_entity->getKey('id'), $entity->id())
           ->sort($entity_type_entity->getKey('revision'), 'DESC')
@@ -220,12 +222,15 @@ class FieldUpdate extends DrushCommands {
     }
 
     $usage_in_field_settings_rows = [];
-    if (\Drupal::moduleHandler()->moduleExists('allowed_formats')) {
+    if (\Drupal::moduleHandler()->moduleExists('allowed_formats') || version_compare(\Drupal::VERSION, '10.0', '>=')) {
       foreach ($bundles as $type) {
         if (!empty($fields[$entity_type][$type])) {
           foreach ($fields[$entity_type][$type] as $field) {
             $field_instance = FieldConfig::loadByName($entity_type, $type, $field);
-            $allowed_formats = $field_instance->getThirdPartySetting('allowed_formats', 'allowed_formats');
+            $allowed_formats = $field_instance->getSetting('allowed_formats');
+            if (empty($allowed_formats)) {
+              $allowed_formats = $field_instance->getThirdPartySetting('allowed_formats', 'allowed_formats');
+            }
             if ($allowed_formats && in_array($format, $allowed_formats)) {
               $usage_in_field_settings_rows[] = [$type, $field];
             }
@@ -334,7 +339,8 @@ class FieldUpdate extends DrushCommands {
     $entity_definition = $entity_type_manager->getDefinition($entity_type);
     $entity_storage = $entity_type_manager->getStorage($entity_type);
 
-    $query = \Drupal::entityQuery($entity_type);
+    $query = \Drupal::entityQuery($entity_type)
+      ->accessCheck(FALSE);
     if ($bundle) {
       $query->condition($entity_definition->getKey('bundle'), $bundle);
     }
