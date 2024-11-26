@@ -58,6 +58,7 @@ class File extends DrushCommands {
     // $query->condition($entity_definition->getKey('id'), 0, '>');
     $results = $query->sort($entity_definition->getKey('id') , 'ASC')
       ->range(0, 1)
+      ->accessCheck(FALSE)
       ->execute();
     if (!empty($results)) {
       $next_id = reset($results);
@@ -67,7 +68,7 @@ class File extends DrushCommands {
         $entity = $entity_storage->load($next_id);
         /** @var \Drupal\filefield_sources\File\MimeType\ExtensionMimeTypeGuesser $guesser */
         $guesser = \Drupal::service('file.mime_type.guesser.extension');
-        $mime_type_from_filename = $guesser->guess($entity->filename->value);
+        $mime_type_from_filename = $guesser->guessMimeType($entity->filename->value);
         $file_extension = pathinfo($entity->filename->value, PATHINFO_EXTENSION);
         if ($mime_type_from_filename == 'application/octet-stream' && !in_array($file_extension, ['eot', 'ttf', 'woff'])) {
           $extension = $guesser->convertMimeTypeToExtension($entity->getMimeType());
@@ -98,6 +99,7 @@ class File extends DrushCommands {
         $query->condition($entity_definition->getKey('id'), $next_id, '>');
         $results = $query->sort($entity_definition->getKey('id') , 'ASC')
           ->range(0, 1)
+          ->accessCheck(FALSE)
           ->execute();
 
         if (!empty($results)) {
