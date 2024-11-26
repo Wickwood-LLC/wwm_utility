@@ -100,6 +100,7 @@ class MediaUtility {
         ->allRevisions()
         ->condition($entity_type->getKey('id'), $entity->id())
         ->sort($entity_type->getKey('revision'), 'DESC')
+        ->accessCheck(FALSE)
         ->execute();
     }
     else {
@@ -221,6 +222,7 @@ class MediaUtility {
     foreach ($fields as $entity_type => $bundles) {
       foreach ($bundles as $bundle => $formatted_fields) {
         $query = \Drupal::entityQuery($entity_type)
+          ->accessCheck(FALSE)
           ->condition($entity_definition->getKey('bundle'), $bundle);
         if ($entity_id) {
           $query->condition($entity_definition->getKey('id'), $entity_id);
