@@ -63,6 +63,7 @@ class FieldUpdate extends DrushCommands {
         ->allRevisions()
         ->condition($entity_type->getKey('id'), $entity->id())
         ->sort($entity_type->getKey('revision'), 'DESC')
+        ->accessCheck(FALSE)
         ->execute();
 
       foreach ($revisions as $revision_id => $entity_id) {
@@ -73,7 +74,8 @@ class FieldUpdate extends DrushCommands {
     }
     else {
       $query = \Drupal::entityQuery($entity_type)
-        ->condition($entity_definition->getKey('bundle'), $bundles, 'IN');
+        ->condition($entity_definition->getKey('bundle'), $bundles, 'IN')
+        ->accessCheck(FALSE);
       $results = $query->execute();
 
       foreach ($results as $entity_id) {
@@ -84,6 +86,7 @@ class FieldUpdate extends DrushCommands {
           ->allRevisions()
           ->condition($entity_type->getKey('id'), $entity->id())
           ->sort($entity_type->getKey('revision'), 'DESC')
+          ->accessCheck(FALSE)
           ->execute();
 
         foreach ($revisions as $revision_id => $entity_id) {
