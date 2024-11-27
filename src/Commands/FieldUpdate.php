@@ -73,24 +73,35 @@ class FieldUpdate extends DrushCommands {
       // $entity = $entity_storage->load($entity_id);
     }
     else {
-      $query = \Drupal::entityQuery($entity_type)
-        ->condition($entity_definition->getKey('bundle'), $bundles, 'IN')
-        ->accessCheck(FALSE);
+      $query = \Drupal::entityQuery($entity_type);
+      if (!empty($entity_definition->getKey('bundle'))) {
+        $query->condition($entity_definition->getKey('bundle'), $bundles, 'IN');
+      }
+      $query->accessCheck(FALSE);
       $results = $query->execute();
 
       foreach ($results as $entity_id) {
         $entity = $entity_storage->load($entity_id);
         $entity_type = $entity->getEntityType();
 
-        $revisions = $entity_storage->getQuery()
-          ->allRevisions()
-          ->condition($entity_type->getKey('id'), $entity->id())
-          ->sort($entity_type->getKey('revision'), 'DESC')
+        $revisions_query = $entity_storage->getQuery()
+          ->condition($entity_type->getKey('id'), $entity->id());
+        if ($entity_definition->isRevisionable()) {
+          $revisions_query->allRevisions()
+            ->sort($entity_type->getKey('revision'), 'DESC');
+        }
+        $revisions = $revisions_query
           ->accessCheck(FALSE)
           ->execute();
 
         foreach ($revisions as $revision_id => $entity_id) {
-          $revision = $entity_storage->loadRevision($revision_id);
+          if ($entity_definition->isRevisionable()) {
+            $revision = $entity_storage->loadRevision($revision_id);
+          }
+          else {
+            $revision = $entity_storage->load($entity_id);
+          }
+
           $this->setTextFormatOnField($revision, $fields, $format, $revision_id);
         }
       }
@@ -110,14 +121,25 @@ class FieldUpdate extends DrushCommands {
       // There is a bug that prevents saving a change in field when it matches with default revision.
       // This is a workaround to that problem got from https://www.drupal.org/project/drupal/issues/2859042#comment-13083066
       $entity_storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityType()->id());
-      $entity->original = $entity_storage->loadRevision($revision_id);
+
+      $entity_definition = $entity->getEntityType();
+
+      if ($entity_definition->isRevisionable()) {
+        $entity->original = $entity_storage->loadRevision($revision_id);
+      }
+      else {
+        $entity->original = $entity_storage->load($revision_id);
+      }
+
 
       $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
 
       if ($pathauto_exists && !in_array($entity->getEntityTypeId(), ['paragraph'])) {
         $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
       }
-      $entity->setNewRevision(FALSE);
+      if ($entity_definition->isRevisionable()) {
+        $entity->setNewRevision(FALSE);
+      }
       // Set syncing so no new revision will be created by content moderation process.
       // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
       $entity->setSyncing(TRUE);
