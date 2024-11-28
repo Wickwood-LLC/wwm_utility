@@ -523,7 +523,7 @@ class FieldUpdate extends DrushCommands {
       else {
         $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
 
-        $query = \Drupal::entityQuery($entity_type);
+        $query = \Drupal::entityQuery($entity_type)->accessCheck(FALSE);
         if ($entity_type != 'user') {
           // TODO: Improve this code to dynamiclly find whether entity type has bundles or not.
           $query->condition($entity_definition->getKey('bundle'), $bundle);
