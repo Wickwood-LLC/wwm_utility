@@ -309,6 +309,7 @@ class MediaUtility {
       $this->embed_view_modes[] = $d7_view_mode;
     }
 
+    $display = NULL;
     if ($media->bundle() == 'image') {
       $image_style_replacements = $this->imageStyleReplacements();
 
@@ -357,7 +358,9 @@ class MediaUtility {
       $display_settings['icon_position'] = 'before';
     }
 
-    $element->setAttribute('data-entity-embed-display', $display);
+    if ($display) {
+      $element->setAttribute('data-entity-embed-display', $display);
+    }
 
     $element->setAttribute('data-entity-embed-display-settings', Json::encode((object) $display_settings));
 
