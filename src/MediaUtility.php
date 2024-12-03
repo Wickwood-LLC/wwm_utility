@@ -81,6 +81,10 @@ class MediaUtility {
       'teaser' => [
         'image_style' => 'image_medium_4x3',
       ],
+      'inline_image_with_caption' => [
+        // Could not be determined.
+        // Use original size.
+      ],
     ];
   }
 
