@@ -114,7 +114,6 @@ class HasURLQueryParam extends ConditionPluginBase {
    * {@inheritdoc}
    */
   public function evaluate() {
-    \Drupal::service('page_cache_kill_switch')->trigger();
     $param_settings = $this->getParamSettings();
     if (!empty($this->configuration['params'])) {
       $url_query = \Drupal::request()->query;
