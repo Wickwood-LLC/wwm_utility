@@ -6,6 +6,7 @@ use Drupal\Core\Condition\ConditionPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Condition\Attribute\Condition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Cache\Cache;
 
 
 /**
@@ -141,6 +142,13 @@ class HasURLQueryParam extends ConditionPluginBase {
       return $return;
     }
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheContexts() {
+    return Cache::mergeContexts(parent::getCacheContexts(), ['url.query_args']);
   }
 
 }
