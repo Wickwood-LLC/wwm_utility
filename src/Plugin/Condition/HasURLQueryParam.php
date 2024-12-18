@@ -36,7 +36,7 @@ class HasURLQueryParam extends ConditionPluginBase {
     $form['params'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Query Parameters'),
-      '#description' => $this->t('Add one ore more query param with optional values to evaulate.'),
+      '#description' => $this->t('Add one ore more query param with optional value to evaulate. Enter entry in separate line in the format "param=value".'),
       '#default_value' => $this->configuration['params'],
     ];
 
