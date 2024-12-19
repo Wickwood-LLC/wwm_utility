@@ -76,6 +76,11 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
       'link_title_template' => '{{ month_name }} {{ year }}',
       'link_url_template' => '/content/{{ year }}/{{ month_number }}',
       'item_template' => '{{ link }} ({{ count }})',
+      'second_level' => [
+        'link_title_template' => '{{ month_name }} {{ year }}',
+        'link_url_template' => '/content/{{ year }}/{{ month_number }}',
+        'item_template' => '{{ link }} ({{ count }})',
+      ],
       'group_by' => 'month',
     ];
   }
@@ -123,8 +128,41 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
       '#options' => [
         'year' => $this->t('Year'),
         'month' => $this->t('Month'),
+        'year_month' => $this->t('Year/Month'),
       ],
       '#default_value' => $this->configuration['group_by'],
+    ];
+
+    $form['second_level'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Second Level'),
+      '#description' => $this->t('Options for second level items.'),
+      '#states' => [
+        'visible' => [
+          'input[name="settings[group_by]"]' => ['value' => 'year_month'],
+        ],
+      ],
+    ];
+
+    $form['second_level']['link_title_template'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Link Title Template'),
+      '#description' => $link_component_help,
+      '#default_value' => $this->configuration['second_level']['link_title_template'] ?? '',
+    ];
+
+    $form['second_level']['link_url_template'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Link URL Template'),
+      '#description' => $link_component_help,
+      '#default_value' => $this->configuration['second_level']['link_url_template'] ?? '',
+    ];
+
+    $form['second_level']['item_template'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Item Template'),
+      '#description' => $this->t('Available variables are {{ link }}, {{ year }}, {{ month_name }}, {{ month_number }} and {{ count }}.'),
+      '#default_value' => $this->configuration['second_level']['item_template'] ?? '',
     ];
 
     return $form;
@@ -139,6 +177,7 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
     $this->configuration['link_url_template'] = $form_state->getValue('link_url_template');
     $this->configuration['item_template'] = $form_state->getValue('item_template');
     $this->configuration['group_by'] = $form_state->getValue('group_by');
+    $this->configuration['second_level'] = $form_state->getValue('second_level');
   }
 
   /**
@@ -150,6 +189,7 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
       $frequency_format = '%Y';
     }
     else {
+      // This handles both month and year_month options.
       $frequency_format = '%Y-%m';
     }
 
@@ -165,10 +205,11 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
         ->orderBy('value', 'DESC')
         ->execute()->fetchAll();
 
-    $items = [];
+    $list = [];
 
     $date_helper = new DateHelper();
 
+    $data = [];
     foreach ($result as $item) {
       $matches = NULL;
       preg_match('/(\d+)(\-(\d+))?/', $item->value, $matches);
@@ -181,45 +222,146 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
         $month_number = NULL;
         $month_name = NULL;
       }
+      $data[$year] = $data[$year] ?? [];
+      if ($this->configuration['group_by'] == 'year') {
+        $data[$year]['count'] = $item->count;
+      }
+      else {
+        $data[$year]['months_data'] = $data[$year]['months_data'] ?? [];
+        $data[$year]['months_data'][$month_number] = [
+          'name' => $month_name,
+          'count' => $item->count,
+        ];
+      }
+    }
+    foreach ($data as $year => $year_data) {
+      if (!isset($year_data['count']) && isset($year_data['months_data'])) {
+        $count = 0;
+        foreach ($year_data['months_data'] as $month_data) {
+          $count += $month_data['count'];
+        }
+        $data[$year]['count'] = $count;
+      }
+    }
+
+    foreach ($data as $year => $year_data) {
+      $year_item = [];
 
       $render_vars = [
         'year' => $year,
-        'month_number' => $month_number,
-        'month_name' => $month_name,
-        'count' => $item->count,
+        'count' => $year_data['count'],
       ];
 
-      $title_render_array = [
-        '#type' => 'inline_template',
-        '#template' => $this->configuration['link_title_template'],
-        '#context' => $render_vars,
-      ];
+      if ($this->configuration['group_by'] == 'year' || $this->configuration['group_by'] == 'year_month') {
+        $title_render_array = [
+          '#type' => 'inline_template',
+          '#template' => $this->configuration['link_title_template'],
+          '#context' => $render_vars,
+        ];
 
-      $link_url_render_array = [
-        '#type' => 'inline_template',
-        '#template' => $this->configuration['link_url_template'],
-        '#context' => $render_vars,
-      ];
+        $link_url_render_array = [
+          '#type' => 'inline_template',
+          '#template' => $this->configuration['link_url_template'],
+          '#context' => $render_vars,
+        ];
 
-      $link_render_array = [
-        '#type' => 'link',
-        '#title' => $this->renderer->renderInIsolation($title_render_array),
-        '#url' => Url::fromUserInput($this->renderer->renderInIsolation($link_url_render_array))
-      ];
+        $link_render_array = [
+          '#type' => 'link',
+          '#title' => $this->renderer->renderInIsolation($title_render_array),
+          '#url' => Url::fromUserInput($this->renderer->renderInIsolation($link_url_render_array))
+        ];
 
-      $render_vars['link'] = $this->renderer->renderInIsolation($link_render_array);
+        $render_vars['link'] = $this->renderer->renderInIsolation($link_render_array);
+
+        $year_item = [
+          '#type' => 'inline_template',
+          '#template' => $this->configuration['item_template'],
+          '#context' => $render_vars,
+        ];
+      }
   
-      $item_render_array = [
-        '#type' => 'inline_template',
-        '#template' => $this->configuration['item_template'],
-        '#context' => $render_vars,
-      ];
-      $items[] = $this->renderer->renderInIsolation($item_render_array);
+      if (isset($year_data['months_data'])) {
+        if ($this->configuration['group_by'] == 'year_month') {
+          $year_item['months'] = [
+            '#theme' => 'item_list',
+            '#items' => [],
+          ];
+          foreach ($year_data['months_data'] as $month_number => $month_data) {
+            $render_vars['month_number'] = $month_number;
+            $render_vars['month_name'] = $month_data['name'];
+            $render_vars['count'] = $month_data['count'];
+
+            $title_render_array = [
+              '#type' => 'inline_template',
+              '#template' => $this->configuration['second_level']['link_title_template'],
+              '#context' => $render_vars,
+            ];
+      
+            $link_url_render_array = [
+              '#type' => 'inline_template',
+              '#template' => $this->configuration['second_level']['link_url_template'],
+              '#context' => $render_vars,
+            ];
+      
+            $link_render_array = [
+              '#type' => 'link',
+              '#title' => $this->renderer->renderInIsolation($title_render_array),
+              '#url' => Url::fromUserInput($this->renderer->renderInIsolation($link_url_render_array))
+            ];
+      
+            $render_vars['link'] = $this->renderer->renderInIsolation($link_render_array);
+            $year_item['months']['#items'][$month_number] = [
+              '#type' => 'inline_template',
+              '#template' => $this->configuration['second_level']['item_template'],
+              '#context' => $render_vars,
+            ];
+          }
+        }
+        else if ($this->configuration['group_by'] == 'month') {
+
+          foreach ($year_data['months_data'] as $month_number => $month_data) {
+            $render_vars['month_number'] = $month_number;
+            $render_vars['month_name'] = $month_data['name'];
+            $render_vars['count'] = $month_data['count'];
+
+            $title_render_array = [
+              '#type' => 'inline_template',
+              '#template' => $this->configuration['link_title_template'],
+              '#context' => $render_vars,
+            ];
+    
+            $link_url_render_array = [
+              '#type' => 'inline_template',
+              '#template' => $this->configuration['link_url_template'],
+              '#context' => $render_vars,
+            ];
+    
+            $link_render_array = [
+              '#type' => 'link',
+              '#title' => $this->renderer->renderInIsolation($title_render_array),
+              '#url' => Url::fromUserInput($this->renderer->renderInIsolation($link_url_render_array))
+            ];
+    
+            $render_vars['link'] = $this->renderer->renderInIsolation($link_render_array);
+    
+            $year_item = [
+              '#type' => 'inline_template',
+              '#template' => $this->configuration['item_template'],
+              '#context' => $render_vars,
+            ];
+            $list[$year . '-' . $month_number] = $year_item;
+          }
+        }
+      }
+
+      if ($this->configuration['group_by'] == 'year' || $this->configuration['group_by'] == 'year_month') {
+        $list[$year] = $year_item;
+      }
     }
 
     return [
       '#theme' => 'item_list',
-      '#items' => $items,
+      '#items' => $list,
     ];
   }
 
