@@ -21,6 +21,10 @@ use Drupal\Core\Render\RendererInterface;
  */
 class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
+  const GROUP_BY_YEAR = 'year';
+  const GROUP_BY_MONTH = 'month';
+  const GROUP_BY_YEAR_MONTH = 'year_month';
+
   /**
    * Active database connection.
    *
@@ -81,7 +85,7 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
         'link_url_template' => '/content/{{ year }}/{{ month_number }}',
         'item_template' => '{{ link }} ({{ count }})',
       ],
-      'group_by' => 'month',
+      'group_by' => static::GROUP_BY_MONTH,
     ];
   }
 
@@ -126,9 +130,9 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
       '#type' => 'radios',
       '#title' => $this->t('Group By'),
       '#options' => [
-        'year' => $this->t('Year'),
-        'month' => $this->t('Month'),
-        'year_month' => $this->t('Year/Month'),
+        static::GROUP_BY_YEAR => $this->t('Year'),
+        static::GROUP_BY_MONTH => $this->t('Month'),
+        static::GROUP_BY_YEAR_MONTH => $this->t('Year/Month'),
       ],
       '#default_value' => $this->configuration['group_by'],
     ];
@@ -139,7 +143,7 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
       '#description' => $this->t('Options for second level items.'),
       '#states' => [
         'visible' => [
-          'input[name="settings[group_by]"]' => ['value' => 'year_month'],
+          'input[name="settings[group_by]"]' => ['value' => static::GROUP_BY_YEAR_MONTH],
         ],
       ],
     ];
@@ -185,7 +189,7 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
    */
   public function build() {
 
-    if ($this->configuration['group_by'] == 'year') {
+    if ($this->configuration['group_by'] == static::GROUP_BY_YEAR) {
       $frequency_format = '%Y';
     }
     else {
@@ -223,7 +227,7 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
         $month_name = NULL;
       }
       $data[$year] = $data[$year] ?? [];
-      if ($this->configuration['group_by'] == 'year') {
+      if ($this->configuration['group_by'] == static::GROUP_BY_YEAR) {
         $data[$year]['count'] = $item->count;
       }
       else {
@@ -252,7 +256,7 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
         'count' => $year_data['count'],
       ];
 
-      if ($this->configuration['group_by'] == 'year' || $this->configuration['group_by'] == 'year_month') {
+      if ($this->configuration['group_by'] == static::GROUP_BY_YEAR || $this->configuration['group_by'] == static::GROUP_BY_YEAR_MONTH) {
         $title_render_array = [
           '#type' => 'inline_template',
           '#template' => $this->configuration['link_title_template'],
@@ -281,7 +285,7 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
       }
   
       if (isset($year_data['months_data'])) {
-        if ($this->configuration['group_by'] == 'year_month') {
+        if ($this->configuration['group_by'] == static::GROUP_BY_YEAR_MONTH) {
           $year_item['months'] = [
             '#theme' => 'item_list',
             '#items' => [],
@@ -317,7 +321,7 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
             ];
           }
         }
-        else if ($this->configuration['group_by'] == 'month') {
+        else if ($this->configuration['group_by'] == static::GROUP_BY_MONTH) {
 
           foreach ($year_data['months_data'] as $month_number => $month_data) {
             $render_vars['month_number'] = $month_number;
@@ -354,7 +358,7 @@ class ContentArchiveBlock extends BlockBase implements ContainerFactoryPluginInt
         }
       }
 
-      if ($this->configuration['group_by'] == 'year' || $this->configuration['group_by'] == 'year_month') {
+      if ($this->configuration['group_by'] == static::GROUP_BY_YEAR|| $this->configuration['group_by'] == static::GROUP_BY_YEAR_MONTH) {
         $list[$year] = $year_item;
       }
     }
