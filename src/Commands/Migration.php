@@ -184,9 +184,10 @@ class Migration extends DrushCommands {
     );
 
     $table = new Table($this->output());
-    $table->setHeaders(['Table Name']);
+    $table->setHeaders(['Sl No', 'Table Name']);
+    $table_num = 1;
     foreach ($migrate_map_tables as $migrate_map_table) {
-      $table->addRow([$migrate_map_table]);
+      $table->addRow([$table_num++, $migrate_map_table]);
     }
     $table->render();
     $confirmation = $this->io()->confirm('Are you sure to delete above listed tables?');
