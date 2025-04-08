@@ -2,11 +2,14 @@
 
 namespace Drupal\wwm_utility\Commands;
 
+use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
 use Drupal\Core\Database\Database;
 use Drush\Commands\DrushCommands;
 use Drupal\Component\Datetime\DateTimePlus;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Drush\Attributes as CLI;
+
 
 /**
  * A Drush commandfile.
@@ -167,6 +170,38 @@ class Migration extends DrushCommands {
     $d9_ids = array_values($d9_result);
 
     print_r(array_diff($d7_ids, $d9_ids));
+  }
+
+  /**
+   * Delete migration tables.
+   */
+  #[CLI\Command(name: 'wwm:delete-migration-tables', aliases: [])]
+  public function listMigrationtables(): int {
+
+    $migrate_map_tables = array_merge(
+      \Drupal::database()->schema()->findTables('migrate_map_%'),
+      \Drupal::database()->schema()->findTables('migrate_message_%')
+    );
+
+    $table = new Table($this->output());
+    $table->setHeaders(['Table Name']);
+    foreach ($migrate_map_tables as $migrate_map_table) {
+      $table->addRow([$migrate_map_table]);
+    }
+    $table->render();
+    $confirmation = $this->io()->confirm('Are you sure to delete above listed tables?');
+    if ($confirmation) {
+      foreach ($migrate_map_tables as $migrate_map_table) {
+        $this->output()->write("Dropping database table $migrate_map_table...");
+        \Drupal::database()->schema()->dropTable($migrate_map_table);
+        $this->output()->writeln(" done.");
+      }
+      $count = count($migrate_map_tables);
+      $this->output()->writeln("Delete $count tables.");
+    } else {
+        $this->output()->writeln('You chose NO.');
+    }
+    return static::EXIT_SUCCESS;
   }
 
 }
