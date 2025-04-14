@@ -162,10 +162,18 @@ class FieldUpdate extends DrushCommands {
     $query = \Drupal::entityQuery($entity_type)
       ->accessCheck(FALSE);
     if (!empty($bundles)) {
-      $query->condition($entity_definition->getKey('bundle'), $bundles, 'IN');
+      $bundle_key = $entity_definition->getKey('bundle');
+      if (!empty($bundle_key)) {
+        $query->condition($bundle_key, $bundles, 'IN');
+      }
     }
 
     $results = $query->execute();
+
+    $revisionable = FALSE;
+    if ($entity_definition->isRevisionable()) {
+      $revisionable = TRUE;
+    }
 
     $usage = [];
     foreach ($results as $entity_id) {
@@ -175,15 +183,29 @@ class FieldUpdate extends DrushCommands {
         $usage[$entity_id]['bundle'] = $entity->bundle();
         $entity_type_entity = $entity->getEntityType();
 
-        $revisions = $entity_storage->getQuery()
-          ->accessCheck(FALSE)
-          ->allRevisions()
-          ->condition($entity_type_entity->getKey('id'), $entity->id())
-          ->sort($entity_type_entity->getKey('revision'), 'DESC')
-          ->execute();
+        if ($revisionable) {
+          $revisions = $entity_storage->getQuery()
+            ->accessCheck(FALSE)
+            ->allRevisions()
+            ->condition($entity_type_entity->getKey('id'), $entity->id())
+            ->sort($entity_type_entity->getKey('revision'), 'DESC')
+            ->execute();
+        }
+        else {
+          $revisions = $entity_storage->getQuery()
+            ->accessCheck(FALSE)
+            ->condition($entity_type_entity->getKey('id'), $entity->id())
+            ->execute();
+        }
 
         foreach ($revisions as $revision_id => $entity_id) {
-          $revision = $entity_storage->loadRevision($revision_id);
+          if ($revisionable) {
+            $revision = $entity_storage->loadRevision($revision_id);
+          }
+          else {
+            $revision = $entity_storage->load($entity_id);
+          }
+
 
           foreach ($fields[$entity_type][$entity->bundle()] as $field) {
             if ($revision->{$field}->format == $format) {
@@ -224,10 +246,6 @@ class FieldUpdate extends DrushCommands {
 
     $entity_type_manager = \Drupal::entityTypeManager();
     $entity_definition = $entity_type_manager->getDefinition($entity_type);
-
-    $types = \Drupal::entityTypeManager()
-      ->getStorage($entity_definition->getBundleEntityType())
-      ->loadMultiple();
 
     /** @var \Drupal\wwm_utility\FieldUtility $wwm_field_utility */
     $wwm_field_utility = \Drupal::service('wwm_utility.field');
