@@ -8,6 +8,7 @@ use Consolidation\OutputFormatters\Options\FormatterOptions;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
 use Consolidation\OutputFormatters\StructuredData\PropertyList;
 use Symfony\Component\Console\Terminal;
+use Drush\Attributes as CLI;
 
 /**
  * A Drush commandfile.
@@ -98,4 +99,24 @@ class Media extends DrushCommands {
         $term = new Terminal();
         return $term->getWidth();
     }
+  /**
+   * Replace crop type reference in crops.
+   */
+  #[CLI\Command(name: 'wwm:replace-crop-type-reference-of-crops', aliases: [])]
+  public function replaceCropTypeReferenceInCrops($from, $to): int {
+    $entity_type_manager = \Drupal::entityTypeManager();
+
+    $results = $entity_type_manager->getStorage('crop')->getQuery()
+      ->condition('type', $from)
+      ->accessCheck(TRUE)
+      ->execute();
+    foreach ($results as $id) {
+      /** @var \Drupal\crop\Entity\Crop $crop */
+      $crop = $entity_type_manager->getStorage('crop')->load($id);
+      $crop->set('type', $to);
+      $crop->save();
+      print "Processed crop with id $id.\n";
+    }
+    return static::EXIT_SUCCESS;
+  }
 }
