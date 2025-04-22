@@ -134,7 +134,7 @@ class FieldUpdate extends DrushCommands {
 
       $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
 
-      if ($pathauto_exists && !in_array($entity->getEntityTypeId(), ['paragraph'])) {
+      if ($pathauto_exists && !in_array($entity->getEntityTypeId(), ['paragraph', 'block_content'])) {
         $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
       }
       if ($entity_definition->isRevisionable()) {
