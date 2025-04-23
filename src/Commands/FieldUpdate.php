@@ -755,4 +755,76 @@ class FieldUpdate extends DrushCommands {
     }
     return $usage;
   }
+
+  /**
+   * Replace usage of a text with another one.
+   */
+  #[CLI\Command(name: 'wwm:replace-text-in-fields', aliases: [])]
+  #[CLI\Argument(name: 'text_old', description: 'Text to be replaced.')]
+  #[CLI\Argument(name: 'text_new', description: 'Text to be replaced with.')]
+  #[CLI\Argument(name: 'field_types', description: 'Field types. Usually "text,text_long,text_with_summary"')]
+  #[CLI\Argument(name: 'entity_type', description: 'Entity type.')]
+  #[CLI\Argument(name: 'bundle', description: 'Entity bundles (optional).')]
+  public function replaceTextinFields($text_old, $text_new, $field_types, $entity_type, $bundle = NULL) {
+
+    $field_types = explode(',', $field_types);
+
+    $bundles = [];
+    if (!empty($bundle)) {
+      $bundles = explode(',', $bundle);
+    }
+
+    $usage = self::getTextUsageInEntityContents($text_old, $field_types, $entity_type, $bundles);
+
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_storage = $entity_type_manager->getStorage($entity_type);
+
+    foreach ($usage as $entity_id => $old_format_usage_data) {
+      foreach ($old_format_usage_data['revisions'] as $revision_id => $fields) {
+        $entity_revision = $entity_storage->loadRevision($revision_id);
+        $this->replaceTextOnField($entity_revision, $fields, $text_old, $text_new, $revision_id);
+      }
+    }
+  }
+
+  protected function replaceTextOnField(ContentEntityInterface $entity, $fields, $text_old, $text_new, $revision_id) {
+    $entity_changed = FALSE;
+    foreach ($fields as $field) {
+      $old_value = $entity->{$field}->value;
+      $num_replaced = NULL;
+      $entity->{$field}->value = str_replace($text_old, $text_new, $old_value, $num_replaced);
+      if ($num_replaced && $num_replaced > 0) {
+        $entity_changed = TRUE;
+      }
+    }
+    if ($entity_changed) {
+      $this->logger()->notice(dt('Saving content after replacing the text ...'));
+      // There is a bug that prevents saving a change in field when it matches with default revision.
+      // This is a workaround to that problem got from https://www.drupal.org/project/drupal/issues/2859042#comment-13083066
+      $entity_storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityType()->id());
+
+      $entity_definition = $entity->getEntityType();
+
+      if ($entity_definition->isRevisionable()) {
+        $entity->original = $entity_storage->loadRevision($revision_id);
+      }
+      else {
+        $entity->original = $entity_storage->load($revision_id);
+      }
+
+
+      $pathauto_exists = \Drupal::moduleHandler()->moduleExists('pathauto');
+
+      if ($pathauto_exists && !in_array($entity->getEntityTypeId(), ['paragraph', 'block_content'])) {
+        $entity->path->pathauto = \Drupal\pathauto\PathautoState::SKIP;
+      }
+      if ($entity_definition->isRevisionable()) {
+        $entity->setNewRevision(FALSE);
+      }
+      // Set syncing so no new revision will be created by content moderation process.
+      // @see Drupal\content_moderation\Entity\Handler\ModerationHandler::onPresave()
+      $entity->setSyncing(TRUE);
+      $entity->save();
+    }
+  }
 }
