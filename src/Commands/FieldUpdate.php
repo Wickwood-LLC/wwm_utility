@@ -652,7 +652,7 @@ class FieldUpdate extends DrushCommands {
     $output = new ConsoleOutput();
 
     $use_in_entities_table = new Table($output);
-    $use_in_entities_table->setHeaderTitle(t('Use in Entities'));
+    $use_in_entities_table->setHeaderTitle(t('Use in @entity_type Entities', ['@entity_type' => $entity_definition->getLabel()]));
     $use_in_entities_table
       ->setHeaders(['Entity ID', 'Bundle', 'Revision', 'Fields']);
     foreach ($usage as $entity_id => $use) {
