@@ -676,6 +676,9 @@ class FieldUpdate extends DrushCommands {
     if (empty($usage)) {
       $use_in_entities_table->addRow([ new TableCell(t('No usage found'), ['colspan' => 4])]);
     }
+    else {
+      $use_in_entities_table->setFooterTitle(t('Found usage of "@text"', ['@text' => $text]));
+    }
     $use_in_entities_table->setColumnWidth(0, 4);
     $use_in_entities_table->setColumnWidth(1, 4);
     $use_in_entities_table->setColumnWidth(2, 4);
