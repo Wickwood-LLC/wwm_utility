@@ -637,12 +637,15 @@ class FieldUpdate extends DrushCommands {
     $usage = self::getTextUsageInEntityContents($text, $field_types, $entity_type, $bundles);
 
     if (empty($bundles)) {
-      $types = \Drupal::entityTypeManager()
-      ->getStorage($entity_definition->getBundleEntityType())
-      ->loadMultiple();
-      $bundles = [];
-      foreach ($types as $type_name => $type) {
-        $bundles[] = $type_name;
+      $bundle_entity_type = $entity_definition->getBundleEntityType();
+      if ($bundle_entity_type) {
+        $types = \Drupal::entityTypeManager()
+        ->getStorage($bundle_entity_type)
+        ->loadMultiple();
+        $bundles = [];
+        foreach ($types as $type_name => $type) {
+          $bundles[] = $type_name;
+        }
       }
     }
 
