@@ -11,3 +11,14 @@ function wwm_utility_preprocess_page_title(&$variables) {
     $variables['title'] = $title;
   }
 }
+
+/**
+ * Implements hook_theme().
+ */
+function wwm_utility_theme() {
+  return [
+    'webform_handler_wwm_utility_fields_not_equal_summary' => [
+      'variables' => ['settings' => NULL, 'handler' => []],
+    ],
+  ];
+}

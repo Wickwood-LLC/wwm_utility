@@ -1,0 +1,22 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of an webform options limit handler.
+ *
+ * Available variables:
+ * - settings: The current configuration for this handler:
+ *   - field_1_name: Field 1 field name.
+ *   - field_2_name: Field 2 field name.
+ *   - error_message: Error message.
+ * - handler: The handler information, including:
+ *   - id: The handler plugin id.
+ *   - handler_id: The handler id.
+ *   - label: The handler label.
+ *   - description: The handler description.
+ *
+ * @ingroup themeable
+ */
+#}
+<b>{{ 'Field 1 Name'|t }}:</b> {{ settings.field_1_name }}<br/>
+<b>{{ 'Field 2 Name'|t }}:</b> {{ settings.field_2_name }}<br/>
+<b>{{ 'Error Message'|t }}:</b> {{ settings.error_message }}<br/>
