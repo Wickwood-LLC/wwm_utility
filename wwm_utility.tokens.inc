@@ -43,8 +43,10 @@ function wwm_utility_tokens($type, $tokens, array $data, array $options, Bubblea
             if ($image_media) {
               $fid = $image_media->getSource()->getSourceFieldValue($image_media);
               $file = File::load($fid);
+              if ($file) {
+                $replacements[$original] = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+              }
 
-              $replacements[$original] = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
             }
           }
           break;
