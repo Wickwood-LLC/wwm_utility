@@ -41,10 +41,16 @@ function wwm_utility_tokens($type, $tokens, array $data, array $options, Bubblea
             $image_media = Media::load($global_metatag_image_id);
 
             if ($image_media) {
-              $fid = $image_media->getSource()->getSourceFieldValue($image_media);
-              $file = File::load($fid);
-              if ($file) {
-                $replacements[$original] = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+              $token = \Drupal::config('wwm_utility.settings')->get('global_metatag_image_token');
+              if (!empty($token)) {
+                $replacements[$original] = \Drupal::token()->replace($token, ['media' => $image_media]);
+              }
+              else {
+                $fid = $image_media->getSource()->getSourceFieldValue($image_media);
+                $file = File::load($fid);
+                if ($file) {
+                  $replacements[$original] = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+                }
               }
 
             }

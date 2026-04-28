@@ -49,6 +49,12 @@ class SettingsForm extends ConfigFormBase {
       '#description' => $this->t('URL for the image from this image media will be available with the global token [site:global-metatag-image]'),
     ];
 
+    $form['global_metatag_image_token'] = [
+      '#type' => 'textfield',
+      '#title' => t('Global Metatag Image Token'),
+      '#default_value' => $config->get('global_metatag_image_token'),
+      '#description' => $this->t('The token to use against above configured media for generating the URL for the [site:global-metatag-image] token.'),
+    ];
 
     return parent::buildForm($form, $form_state);
   }
@@ -64,6 +70,7 @@ class SettingsForm extends ConfigFormBase {
     $this->configFactory->getEditable(static::SETTINGS)
       // Set the submitted editor CSS setting
       ->set('global_metatag_image', $form_state->getValue('global_metatag_image'))
+      ->set('global_metatag_image_token', $form_state->getValue('global_metatag_image_token'))
       ->save();
 
     parent::submitForm($form, $form_state);
