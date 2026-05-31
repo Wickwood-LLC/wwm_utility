@@ -10,6 +10,22 @@ use Drupal\media\Entity\Media;
 use Drupal\file\Entity\File;
 
 /**
+ * Implements hook_token_info().
+ */
+function wwm_utility_token_info() {
+  return [
+    'tokens' => [
+      'term' => [
+        'name-slug' => [
+          'name' => t('Term slug'),
+          'description' => t('URL-safe taxonomy term name.'),
+        ],
+      ],
+    ],
+  ];
+}
+
+/**
  * Implements hook_token_info_alter()
  */
 function wwm_utility_token_info_alter(&$data) {
@@ -56,6 +72,14 @@ function wwm_utility_tokens($type, $tokens, array $data, array $options, Bubblea
             }
           }
           break;
+      }
+    }
+  }
+  else if ($type === 'term' && !empty($data['term'])) {
+    foreach ($tokens as $name => $original) {
+      if ($name === 'name-slug') {
+        $replacements[$original] = \Drupal::service('pathauto.alias_cleaner')
+          ->cleanString($data['term']->getName());
       }
     }
   }
