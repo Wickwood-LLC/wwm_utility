@@ -7,6 +7,8 @@ use Consolidation\OutputFormatters\FormatterManager;
 use Consolidation\OutputFormatters\Options\FormatterOptions;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
 use Consolidation\OutputFormatters\StructuredData\PropertyList;
+use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\Html;
 use Symfony\Component\Console\Terminal;
 use Drush\Attributes as CLI;
 
@@ -118,5 +120,128 @@ class Media extends DrushCommands {
       print "Processed crop with id $id.\n";
     }
     return static::EXIT_SUCCESS;
+  }
+
+  public function _findFormattedTextFields(string $entity_type): array {
+    /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager */
+    $entityFieldManager = \Drupal::service('entity_field.manager');
+
+    $fields = [];
+
+    $bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type);
+
+    foreach (array_keys($bundles) as $bundle) {
+        $definitions = $entityFieldManager->getFieldDefinitions($entity_type, $bundle);
+
+        foreach ($definitions as $field_name => $definition) {
+            $type = $definition->getType();
+
+            if (in_array($type, [
+                'text',
+                'text_long',
+                'text_with_summary',
+            ], TRUE)) {
+                $fields[$bundle][$field_name] = [
+                    'label' => $definition->getLabel(),
+                    'type' => $type,
+                    'required' => $definition->isRequired(),
+                ];
+            }
+        }
+    }
+    return $fields;
+  }
+
+   /**
+   * Find formatted text fields.
+   */
+  #[CLI\Command(name: 'wwm:media-embeds-replace-linkit-field-name', aliases: [])]
+  public function mediaEmbedsReplaceLinkitFieldName(string $entity_type): int {
+
+    $entity_type_manager = \Drupal::entityTypeManager();
+
+    $entity_storage = $entity_type_manager->getStorage($entity_type);
+    $entity_type_definition = $entity_type_manager->getDefinition($entity_type);
+
+    $query = \Drupal::entityQuery($entity_type)
+      ->accessCheck(FALSE);
+
+    $fields = $this->_findFormattedTextFields($entity_type);
+
+    
+    foreach ($fields as $bundle => $filed_list) {
+      $limit = 100;
+      $offset = 0;
+      do {
+        $query_copy = clone $query;
+        // Add bundle condition only if the entity type supports bundles.
+        if ($bundle !== NULL && $bundleKey = $entity_type_definition->getKey('bundle')) {
+            $query_copy->condition($bundleKey, $bundle);
+        }
+        $ids = $query_copy->range($offset, $limit)
+            ->sort($entity_type_definition->getKey('id'))
+            ->execute();
+
+        if (!$ids) {
+            break;
+        }
+
+        $entities = $entity_storage->loadMultiple($ids);
+
+        foreach ($entities as $entity) {
+          // $this->output()->writeln("Loaded {$entity->id()}: {$entity->label()}");
+          foreach ($filed_list as $field_name => $field_info) {
+            $field = $entity->get($field_name);
+            if (! $field->isEmpty()) {
+              $changed = false;
+              $value = $field->value;
+              $new_value = $this->changeLinkitFieldNameInMediaEmbeddings($value, $changed);
+              if ($changed) {
+                // $this->output()->writeln('======================================');
+                // $this->output()->writeln($value);
+                // $this->output()->writeln('**************************************');
+                // $this->output()->writeln($new_value);
+                // $this->output()->writeln('======================================');
+                $field->value = $new_value;
+                $this->output()->writeln("Updating $entity_type with ID {$entity->id()}");
+                $entity->save();
+              }
+            }
+          }
+        }
+
+        $offset += $limit;
+      } while (TRUE);
+    }
+    
+    return static::EXIT_SUCCESS;
+  }
+
+  protected function changeLinkitFieldNameInMediaEmbeddings(string $value, bool &$changed): string {
+    $dom = Html::load($value);
+    $xpath = new \DOMXPath($dom);
+
+    $changed = false;
+
+    foreach ($xpath->query('//drupal-entity') as $element) {
+        /** @var \DOMElement $element */
+        $settings = $element->getAttribute('data-entity-embed-display-settings');
+        if (empty($settings)) {
+          continue;
+        }
+        $settings = Json::decode($settings, true);
+        if (isset($settings['linkit'])) {
+          $settings['linkit_uri'] = $settings['linkit'];
+          unset($settings['linkit']);
+
+          $settings = Json::encode($settings);
+
+          $element->setAttribute('data-entity-embed-display-settings', $settings);
+
+          $changed = true;
+        }
+    }
+
+    return Html::serialize($dom);
   }
 }
