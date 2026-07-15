@@ -6,6 +6,8 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\views\Plugin\views\argument_default\ArgumentDefaultPluginBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\user\Entity\Role;
+use Drupal\user\RoleInterface;
 
 /**
  * Default argument plugin to extract the current user but allowing to skip if user has any
@@ -33,11 +35,14 @@ class CurrentUserWithSkippingByRoles extends ArgumentDefaultPluginBase implement
    * {@inheritdoc}
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+    $roles = Role::loadMultiple();
+    unset($roles[RoleInterface::ANONYMOUS_ID]);
+    $role_names =  array_map(fn(RoleInterface $role) => $role->label(), $roles);
     $form['roles'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Select roles for which this filter will not be applied'),
       '#default_value' => $this->options['roles'],
-      '#options' => array_map('\Drupal\Component\Utility\Html::escape', user_role_names()),
+      '#options' => array_map('\Drupal\Component\Utility\Html::escape', $role_names),
       '#description' => $this->t('Filtering to current user ID will be skipped if current user having any of selected roles here. On skipping, it will return skipping value configured below.'),
     ];
 
