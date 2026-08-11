@@ -1,0 +1,4 @@
+div[data-type="placeholder"][data-name="youtube"] {
+    max-width: none !important;
+    height: inherit !important;
+}

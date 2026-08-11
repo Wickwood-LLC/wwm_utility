@@ -1,0 +1,11 @@
+# All libraries supported by the wwm_utility module.
+fitvidsjs:
+  version: 0.1.1
+  js:
+    js/fitvidsjs.js: {}
+  css:
+    theme:
+      css/fitvids.css: {}
+  dependencies:
+    - core/jquery
+    - fitvids/fitvids
