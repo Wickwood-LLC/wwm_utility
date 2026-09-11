@@ -628,6 +628,7 @@ class FieldUpdate extends DrushCommands {
 
     $entity_type_manager = \Drupal::entityTypeManager();
     $entity_definition = $entity_type_manager->getDefinition($entity_type);
+    $entity_storage = $entity_type_manager->getStorage($entity_type);
 
     /** @var \Drupal\wwm_utility\FieldUtility $wwm_field_utility */
     $wwm_field_utility = \Drupal::service('wwm_utility.field');
@@ -656,13 +657,15 @@ class FieldUpdate extends DrushCommands {
     $use_in_entities_table
       ->setHeaders(['Entity ID', 'Bundle', 'Revision', 'Fields']);
     foreach ($usage as $entity_id => $use) {
+      $entity = $entity_storage->load($entity_id);
+      $current_revision_id = $entity->getRevisionId();
       $revision_index = 0;
       foreach ($use['revisions'] as $revision_id => $fields) {
         if ($revision_index == 0) {
           $use_in_entities_table->addRow([
             new TableCell($entity_id, ['rowspan' => count($use['revisions'])]),
             new TableCell($use['bundle'], ['rowspan' => count($use['revisions'])]),
-            $revision_id,
+            $revision_id . ($revision_id == $current_revision_id ? '*' : ''),
             implode(", ", $fields)
           ]);
         }
