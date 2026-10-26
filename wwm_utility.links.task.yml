@@ -3,3 +3,9 @@ wwm_utility.find_alias:
   base_route: entity.path_alias.collection
   title: 'Find'
   weight: 9
+
+wwm_utility.domain_settings:
+  route_name: wwm_utility.domain_settings
+  base_route: system.site_maintenance_mode
+  title: 'Domain Maintenance'
+  weight: 9

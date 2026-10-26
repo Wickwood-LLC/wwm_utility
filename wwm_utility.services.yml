@@ -5,3 +5,8 @@ services:
   wwm_utility.media:
     class: Drupal\wwm_utility\MediaUtility
     arguments: []
+  wwm_utility.maintenance_mode:
+    class: Drupal\wwm_utility\CustomMaintenanceMode
+    decorates: maintenance_mode
+    arguments:
+      - '@wwm_utility.maintenance_mode.inner'

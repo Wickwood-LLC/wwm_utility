@@ -26,3 +26,10 @@ wwm_utility.find_alias:
   requirements:
     _permission: 'administer url aliases'
 
+wwm_utility.domain_settings:
+  path: '/admin/config/development/maintenance/domain'
+  defaults:
+    _form: '\Drupal\wwm_utility\Form\DomainSettingsForm'
+    _title: 'Maintenance mode'
+  requirements:
+    _custom_access: '\Drupal\wwm_utility\Form\DomainSettingsForm::access'
