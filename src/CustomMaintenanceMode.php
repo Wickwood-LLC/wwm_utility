@@ -12,6 +12,13 @@ class CustomMaintenanceMode implements MaintenanceModeInterface {
   ) {}
 
   public function applies(RouteMatchInterface $route_match) {
+    // This exception logic is copied from MaintenanceMode::applies()
+    if ($route = $route_match->getRouteObject()) {
+      if ($route->getOption('_maintenance_access')) {
+        return FALSE;
+      }
+    }
+
     // Your custom business logic.
     $custom_maintenance = $this->shouldEnableMaintenance();
 
